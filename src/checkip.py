@@ -31,10 +31,11 @@ Test IPs:
 
 
 PROCESSES = 1
-logging.basicConfig(filename=".log",
-                    filemode="w",
-                    format="%(name)s - %(levelname)s - %(message)s",
-                    level=logging.DEBUG)
+logging.basicConfig(
+    filename=".log",
+    filemode="w",
+    format="%(name)s - %(levelname)s - %(message)s",
+    level=logging.DEBUG)
 logger = logging.getLogger("ipchecker")
 
 class IP_Checker():
@@ -77,9 +78,11 @@ class IP_Checker():
         # check if forcing all ips or not
         actual_ips = None
         if self.ui.all_ips:
-            actual_ips = self.filter_record_ips(self.ips,
-                                                record_ips,
-                                                display=False)
+            actual_ips = self.filter_record_ips(
+                self.ips,
+                record_ips,
+                display=False
+            )
             self.run_collector_pipeline(self.ips)
         else:
             actual_ips = self.filter_record_ips(self.ips, record_ips)
@@ -111,21 +114,23 @@ class IP_Checker():
         logger.info("Spining up vt child-process")
         vt_main_pipe, vt_child_pipe = multiprocessing.Pipe()
         vt_process = multiprocessing.Process(
-                                             target=self.process_collector_tasks,
-                                             args=(vt_queue, vt_child_pipe)
+            target=self.process_collector_tasks,
+            args=(vt_queue, vt_child_pipe)
         )
         logger.info("Spining up otx process")
         otx_main_pipe, otx_child_pipe = multiprocessing.Pipe()
         otx_process = multiprocessing.Process(
-                                              target=self.process_collector_tasks,
-                                              args=(otx_queue, otx_child_pipe)
+            target=self.process_collector_tasks,
+            args=(otx_queue, otx_child_pipe)
         )
         logger.info("Spinning up robtex process")
         rob_main_pipe, rob_child_pipe = multiprocessing.Pipe()
         rob_process = multiprocessing.Process(
-                                              target=self.process_collector_tasks,
-                                              args=(rob_queue,
-                                                    rob_child_pipe)
+            target=self.process_collector_tasks,
+            args=(
+                rob_queue,
+                rob_child_pipe
+            )
         )
         logger.info("Processing vt tasts")
         vt_process.start()
