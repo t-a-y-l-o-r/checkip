@@ -25,3 +25,6 @@ API Application for a variety of security programs
       * Communicating Files
       * Files Referring (if possible, filtered to MacOS type files only)
 
+## Known Issues
+Mac users, please add this line to your shell's dotfile:
+`export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=Yes`
