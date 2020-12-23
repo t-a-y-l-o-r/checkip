@@ -3,7 +3,7 @@ from collectors import collectors
 from report import report
 from reader import reader
 from io import StringIO
-import multi.as multi
+import multiprocessing as multi
 from ui import ui
 import traceback
 import cProfile
