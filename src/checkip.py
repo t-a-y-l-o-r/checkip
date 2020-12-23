@@ -3,7 +3,7 @@ from collectors import collectors
 from report import report
 from reader import reader
 from io import StringIO
-import multiprocessing
+import multi.as multi
 from ui import ui
 import traceback
 import cProfile
@@ -104,28 +104,28 @@ class IP_Checker():
         '''
         # queue up all collector tasks
         logger.info("Building collector task queues")
-        vt_queue = multiprocessing.Queue()
-        otx_queue = multiprocessing.Queue()
-        rob_queue = multiprocessing.Queue()
+        vt_queue = multi.Queue()
+        otx_queue = multi.Queue()
+        rob_queue = multi.Queue()
         vt_queue = self.add_vt_tasks(vt_queue, ips)
         otx_queue = self.add_otx_tasks(otx_queue, ips)
         rob_queue = self.add_rob_tasks(rob_queue, ips)
 
         logger.info("Spining up vt child-process")
-        vt_main_pipe, vt_child_pipe = multiprocessing.Pipe()
-        vt_process = multiprocessing.Process(
+        vt_main_pipe, vt_child_pipe = multi.Pipe()
+        vt_process = multi.Process(
             target=self.process_collector_tasks,
             args=(vt_queue, vt_child_pipe)
         )
         logger.info("Spining up otx process")
-        otx_main_pipe, otx_child_pipe = multiprocessing.Pipe()
-        otx_process = multiprocessing.Process(
+        otx_main_pipe, otx_child_pipe = multi.Pipe()
+        otx_process = multi.Process(
             target=self.process_collector_tasks,
             args=(otx_queue, otx_child_pipe)
         )
         logger.info("Spinning up robtex process")
-        rob_main_pipe, rob_child_pipe = multiprocessing.Pipe()
-        rob_process = multiprocessing.Process(
+        rob_main_pipe, rob_child_pipe = multi.Pipe()
+        rob_process = multi.Process(
             target=self.process_collector_tasks,
             args=(
                 rob_queue,
@@ -140,15 +140,15 @@ class IP_Checker():
         rob_process.start()
 
         for ip in ips:
-            multiprocessing.connection.wait([vt_main_pipe])
+            multi.connection.wait([vt_main_pipe])
             pipe_data = vt_main_pipe.recv()
             self.parse_pipe_data(pipe_data, use_ip=True)
 
-            multiprocessing.connection.wait([otx_main_pipe])
+            multi.connection.wait([otx_main_pipe])
             pipe_data = otx_main_pipe.recv()
             self.parse_pipe_data(pipe_data)
 
-            multiprocessing.connection.wait([rob_main_pipe])
+            multi.connection.wait([rob_main_pipe])
             pipe_data = rob_main_pipe.recv()
             self.parse_pipe_data(pipe_data)
 
