@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+from multiprocessing.connection import Connection
+from collections.abc import KeysView
+from typing import Any, Dict, List
 from collectors import collectors
 import multiprocessing as multi
-from typing import Dict, List
 from report import report
 from reader import reader
 from io import StringIO
@@ -11,6 +13,7 @@ import cProfile
 import logging
 import json
 import sys
+
 '''
 A set of python tools used to generate securirty reports on flagged ips.
 The ip's will be passed by the user using flags
@@ -98,16 +101,18 @@ class IP_Checker():
 #                       Collector Stuff
 #   ========================================================================
 
-    def run_collector_pipeline(self, ips: List[str]) -> None:
+    def run_collector_pipeline(self, ips: KeysView[Any]) -> None:
         '''
         The `master` method for all collector
         pipes, processes, and tasks.
         '''
         # queue up all collector tasks
         logger.info("Building collector task queues")
-        vt_queue = multi.Queue()
-        otx_queue = multi.Queue()
-        rob_queue = multi.Queue()
+
+        vt_queue: multi.Queue = multi.Queue()
+        otx_queue: multi.Queue = multi.Queue()
+        rob_queue: multi.Queue = multi.Queue()
+
         vt_queue = self.add_vt_tasks(vt_queue, ips)
         otx_queue = self.add_otx_tasks(otx_queue, ips)
         rob_queue = self.add_rob_tasks(rob_queue, ips)
@@ -199,7 +204,7 @@ class IP_Checker():
     def process_collector_tasks(
         self,
         queue: multi.Queue,
-        pipe: multi.Pipe
+        pipe: Connection
     ) -> None:
         '''
         Attempts to process the task queue.
@@ -224,7 +229,11 @@ class IP_Checker():
             logger.info(f"Done processing {task}")
             pipe.send([ip, header, report])
 
-    def add_vt_tasks(self, queue: multi.Queue, ips: List[str]) -> multi.Queue:
+    def add_vt_tasks(
+        self,
+        queue: multi.Queue,
+        ips: KeysView[Any]
+    ) -> multi.Queue:
         '''
         Adds a set of ip and collector to the queue
         for each ip in the global list of ips
@@ -241,7 +250,11 @@ class IP_Checker():
             queue.put([ip, collector])
         return queue
 
-    def add_otx_tasks(self, queue: multi.Queue, ips: List[str]) -> multi.Queue:
+    def add_otx_tasks(
+        self,
+        queue: multi.Queue,
+        ips: KeysView[Any]
+    ) -> multi.Queue:
         '''
         Adds a set of ip and collector to the queue
         for each ip in the global list of ips
@@ -258,7 +271,11 @@ class IP_Checker():
             queue.put([ip, collector])
         return queue
 
-    def add_rob_tasks(self, queue: multi.Queue, ips: List[str]) -> multi.Queue:
+    def add_rob_tasks(
+        self,
+        queue: multi.Queue,
+        ips: KeysView[Any]
+    ) -> multi.Queue:
         '''
         Adds a set of ip and collector to the queue
         for each ip in the global list of ips
@@ -279,7 +296,7 @@ class IP_Checker():
 #                       Record Stuff
 #   ========================================================================
 
-    def record_ips(self, ips: List[str]) -> None:
+    def record_ips(self, ips: Dict[Any, Any]) -> None:
         self.report.write_record(
             json.dumps(
                 ips,
@@ -290,8 +307,8 @@ class IP_Checker():
 
     def filter_record_ips(
         self,
-        given: List[str],
-        record: List[str],
+        given: Dict[str, str],
+        record: Dict[str, str],
         display: bool=True
     ) -> Dict:
         '''
