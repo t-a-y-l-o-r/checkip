@@ -1,6 +1,7 @@
 # project specific stuff
-# record.json
-# report.json
+record.json
+report.json
+.log
 
 
 # Byte-compiled / optimized / DLL files
