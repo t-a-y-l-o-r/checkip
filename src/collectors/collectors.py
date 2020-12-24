@@ -3,14 +3,13 @@ from typing import Type
 from enum import Enum
 import requests
 import json
+import os
 '''
 Author: Taylor Cochran
 '''
 
-VIRUS_TOTAL_KEY = "".join([
-])
-OTX_KEY = "".join([
-])
+VIRUS_TOTAL_KEY = os.environ["VT_KEY"]
+OTX_KEY = os.environ["OTX_KEY"]
 
 '''
             ================

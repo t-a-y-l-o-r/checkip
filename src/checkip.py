@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from multiprocessing.connection import Connection
-from collections.abc import KeysView
-from typing import Any, Dict, List
+from typing import Any, Dict, KeysView, List
 from collectors import collectors
 import multiprocessing as multi
 from report import report
