@@ -97,8 +97,19 @@ class IP_Checker():
 
 
 #   ========================================================================
-#                       Collector Stuff
+#                       Collector Process Stuff
 #   ========================================================================
+
+    def get_all_collectors(self) -> List[collectors.Collector]:
+        '''
+        Provide a list of collectors for each type
+        '''
+        collectors = [
+            self.factory.create_virus_total_collector(),
+            self.factory.create_otx_collector(),
+            self.factory.create_robtex_collector()
+        ]
+        return collectors
 
     def run_collector_pipeline(self, ips: KeysView[Any]) -> None:
         '''
@@ -107,70 +118,50 @@ class IP_Checker():
         '''
         # queue up all collector tasks
         logger.info("Building collector task queues")
-
-        vt_queue: multi.Queue = multi.Queue()
-        otx_queue: multi.Queue = multi.Queue()
-        rob_queue: multi.Queue = multi.Queue()
-
-        vt_queue = self.add_vt_tasks(vt_queue, ips)
-        otx_queue = self.add_otx_tasks(otx_queue, ips)
-        rob_queue = self.add_rob_tasks(rob_queue, ips)
-
-        logger.info("Spining up vt child-process")
-        vt_main_pipe, vt_child_pipe = multi.Pipe()
-        vt_process = multi.Process(
-            target=self.process_collector_tasks,
-            args=(vt_queue, vt_child_pipe)
-        )
-        logger.info("Spining up otx process")
-        otx_main_pipe, otx_child_pipe = multi.Pipe()
-        otx_process = multi.Process(
-            target=self.process_collector_tasks,
-            args=(otx_queue, otx_child_pipe)
-        )
-        logger.info("Spinning up robtex process")
-        rob_main_pipe, rob_child_pipe = multi.Pipe()
-        rob_process = multi.Process(
-            target=self.process_collector_tasks,
-            args=(
-                rob_queue,
-                rob_child_pipe
+        collectors = self.get_all_collectors()
+        queues: List[multi.Queue] = []
+        for collector in collectors:
+            queues.append(
+                self.add_ip_tasks(multi.Queue(), ips, collector)
             )
-        )
-        logger.info("Processing vt tasts")
-        vt_process.start()
-        logger.info("Processing otx tasks")
-        otx_process.start()
-        logger.info("Processing robtext tasks")
-        rob_process.start()
 
+        # initalize pip pairs and processes for each task-queue
+        pipe_pairs = []
+        processes = []
+        for queue in queues:
+            logger.info(f"Spining up collector process for: {queue}")
+            parent, child = multi.Pipe()
+            process = multi.Process(
+                target=self.process_collector_tasks,
+                args=(queue, child)
+            )
+            pipe_pairs.append((parent, child))
+            processes.append(process)
+
+        # spin up processes
+        for process in processes:
+            logger.info(f"Spinning up process: {process}")
+            process.start()
+
+        # process
+        first = True
         for ip in ips:
-            multi.connection.wait([vt_main_pipe])
-            pipe_data = vt_main_pipe.recv()
-            self.parse_pipe_data(pipe_data, use_ip=True)
+            for parent, child in pipe_pairs:
+                multi.connection.wait([parent])
+                data = parent.recv()
+                self.parse_pipe_data(data, use_ip=first)
+                first = False
 
-            multi.connection.wait([otx_main_pipe])
-            pipe_data = otx_main_pipe.recv()
-            self.parse_pipe_data(pipe_data)
+        # join and close
+        for process in processes:
+            logger.info(f"Closing process: {parent}")
+            process.join()
+            process.close()
 
-            multi.connection.wait([rob_main_pipe])
-            pipe_data = rob_main_pipe.recv()
-            self.parse_pipe_data(pipe_data)
+        for parent, child in pipe_pairs:
+            logger.info(f"Closing pipe: {parent}")
+            parent.close()
 
-        vt_process.join()
-        vt_process.close()
-        vt_main_pipe.close()
-        logger.info("Vt tasks processed")
-
-        otx_process.join()
-        otx_process.close()
-        otx_main_pipe.close()
-        logger.info("OTX tasks processed")
-
-        rob_process.join()
-        rob_process.close()
-        rob_main_pipe.close()
-        logger.info("Robtex tasks processed")
 
     def parse_pipe_data(self, data: List[str], use_ip: bool=False) -> None:
         '''
@@ -228,10 +219,11 @@ class IP_Checker():
             logger.info(f"Done processing {task}")
             pipe.send([ip, header, report])
 
-    def add_vt_tasks(
+    def add_ip_tasks(
         self,
         queue: multi.Queue,
-        ips: KeysView[Any]
+        ips: KeysView[Any],
+        collector: collectors.Collector
     ) -> multi.Queue:
         '''
         Adds a set of ip and collector to the queue
@@ -239,57 +231,15 @@ class IP_Checker():
 
         Params:
             queue - the queue to add elements
+            ips - the list of ip address to queue up for
+            collector - the collectors.Collector to use
         Time:
-            linear with the number of global ips
-        Space:
-            linear with the number of global ips
+            linear with the number of ips
         '''
-        collector = self.factory.create_virus_total_collector()
         for ip in ips:
             queue.put([ip, collector])
         return queue
 
-    def add_otx_tasks(
-        self,
-        queue: multi.Queue,
-        ips: KeysView[Any]
-    ) -> multi.Queue:
-        '''
-        Adds a set of ip and collector to the queue
-        for each ip in the global list of ips
-
-        Params:
-            queue - the queue to add elements
-        Time:
-            linear with the number of global ips
-        Space:
-            linear with the number of global ips
-        '''
-        collector = self.factory.create_otx_collector()
-        for ip in ips:
-            queue.put([ip, collector])
-        return queue
-
-    def add_rob_tasks(
-        self,
-        queue: multi.Queue,
-        ips: KeysView[Any]
-    ) -> multi.Queue:
-        '''
-        Adds a set of ip and collector to the queue
-        for each ip in the global list of ips
-
-        Params:
-            queue - the queue to add elements
-        Time:
-            linear with the number of global ips
-        Space:
-            linear with the number of global ips
-        '''
-        collector = self.factory.create_robtex_collector()
-        for ip in ips:
-            queue.put([ip, collector])
-        return queue
 
 #   ========================================================================
 #                       Record Stuff
