@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from multiprocessing.connection import Connection
-from typing import Any, Dict, KeysView, List
+from typing import Any, Dict, KeysView, List, Tuple
 from collectors import collectors
 import multiprocessing as multi
 from report import report
@@ -31,6 +31,25 @@ Test IPs:
 166.164.29.88
 
 '''
+
+#   ========================================================================
+#                       Table of Contents
+#   ========================================================================
+# 1. IP_Checker
+# 2. The `main` for the pipeline
+# 3. Collector Process
+# 4. Record
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
 
 
 PROCESSES = 1
@@ -111,6 +130,37 @@ class IP_Checker():
         ]
         return collectors
 
+    def process_pipe_data(
+        self,
+        pipe_pairs: List[Tuple[Connection, Connection]]
+    ) -> None:
+        '''
+        Manages the processing of pipe received from the parent
+        '''
+        first = True
+        for parent, child in pipe_pairs:
+            multi.connection.wait([parent])
+            data = parent.recv()
+            self.parse_pipe_data(data, use_ip=first)
+            first = False
+
+    def pipes_and_processes(
+        self,
+        queues: List[multi.Queue]
+    ) -> Tuple[List[Any], List[multi.Process]]:
+        pipe_pairs = []
+        processes = []
+        for queue in queues:
+            logger.info(f"Spining up collector process for: {queue}")
+            parent, child = multi.Pipe()
+            process = multi.Process(
+                target=self.process_collector_tasks,
+                args=(queue, child)
+            )
+            pipe_pairs.append((parent, child))
+            processes.append(process)
+        return pipe_pairs, processes
+
     def run_collector_pipeline(self, ips: KeysView[Any]) -> None:
         '''
         The `master` method for all collector
@@ -126,35 +176,19 @@ class IP_Checker():
             )
 
         # initalize pip pairs and processes for each task-queue
-        pipe_pairs = []
-        processes = []
-        for queue in queues:
-            logger.info(f"Spining up collector process for: {queue}")
-            parent, child = multi.Pipe()
-            process = multi.Process(
-                target=self.process_collector_tasks,
-                args=(queue, child)
-            )
-            pipe_pairs.append((parent, child))
-            processes.append(process)
+        pipe_pairs, processes = self.pipes_and_processes(queues)
 
         # spin up processes
         for process in processes:
             logger.info(f"Spinning up process: {process}")
             process.start()
 
-        # process
-        first = True
         for ip in ips:
-            for parent, child in pipe_pairs:
-                multi.connection.wait([parent])
-                data = parent.recv()
-                self.parse_pipe_data(data, use_ip=first)
-                first = False
+            self.process_pipe_data(pipe_pairs)
 
         # join and close
         for process in processes:
-            logger.info(f"Closing process: {parent}")
+            logger.info(f"Closing process: {process}")
             process.join()
             process.close()
 
