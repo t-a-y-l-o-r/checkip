@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Type
 from enum import Enum
 import requests
 import json
@@ -16,23 +17,20 @@ OTX_KEY = "".join([
             Module Interface
             ================
 '''
-
-Collector = Enum("Collector", "virus_total otx robtex")
-
 class Abstract_Collector_Factory(ABC):
     '''
     Abstract factory for the collectors defined in this module
     '''
     @abstractmethod
-    def create_virus_total_collector(self, ip=None) -> Collector:
+    def create_virus_total_collector(self, ip=None) -> "Collector":
         pass
 
     @abstractmethod
-    def create_otx_collector(self, ip=None) -> Collector:
+    def create_otx_collector(self, ip=None) -> "Collector":
         pass
 
     @abstractmethod
-    def create_robtex_collector(self, ip=None) -> Collector:
+    def create_robtex_collector(self, ip=None) -> "Collector":
         pass
 
 
@@ -40,13 +38,13 @@ class Collector_Factory(Abstract_Collector_Factory):
     '''
     Concrete factory for the collectors defined within this module
     '''
-    def create_virus_total_collector(self, ip=None) -> Collector:
+    def create_virus_total_collector(self, ip=None) -> "Collector":
         return Virus_Total_Collector(ip=ip)
 
-    def create_otx_collector(self, ip=None) -> Collector:
+    def create_otx_collector(self, ip=None) -> "Collector":
         return OTX_Collector(ip=ip)
 
-    def create_robtex_collector(self, ip=None) -> Collector:
+    def create_robtex_collector(self, ip=None) -> "Collector":
         return Robtex_Collector(ip=ip)
 
 

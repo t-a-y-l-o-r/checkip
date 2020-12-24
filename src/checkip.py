@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
+from multiprocessing.connection import Connection
+from collections.abc import KeysView
+from typing import Any, Dict, List
 from collectors import collectors
+import multiprocessing as multi
 from report import report
 from reader import reader
 from io import StringIO
-import multiprocessing
 from ui import ui
 import traceback
 import cProfile
 import logging
 import json
 import sys
+
 '''
 A set of python tools used to generate securirty reports on flagged ips.
 The ip's will be passed by the user using flags
@@ -51,7 +55,7 @@ class IP_Checker():
 #                       Main Stuff
 #   ========================================================================
 
-    def main(self):
+    def main(self) -> None:
         '''
         The main function. Manages all of the sub-modules,
         and the ordering in which they will execute.
@@ -97,35 +101,37 @@ class IP_Checker():
 #                       Collector Stuff
 #   ========================================================================
 
-    def run_collector_pipeline(self, ips):
+    def run_collector_pipeline(self, ips: KeysView[Any]) -> None:
         '''
         The `master` method for all collector
         pipes, processes, and tasks.
         '''
         # queue up all collector tasks
         logger.info("Building collector task queues")
-        vt_queue = multiprocessing.Queue()
-        otx_queue = multiprocessing.Queue()
-        rob_queue = multiprocessing.Queue()
+
+        vt_queue: multi.Queue = multi.Queue()
+        otx_queue: multi.Queue = multi.Queue()
+        rob_queue: multi.Queue = multi.Queue()
+
         vt_queue = self.add_vt_tasks(vt_queue, ips)
         otx_queue = self.add_otx_tasks(otx_queue, ips)
         rob_queue = self.add_rob_tasks(rob_queue, ips)
 
         logger.info("Spining up vt child-process")
-        vt_main_pipe, vt_child_pipe = multiprocessing.Pipe()
-        vt_process = multiprocessing.Process(
+        vt_main_pipe, vt_child_pipe = multi.Pipe()
+        vt_process = multi.Process(
             target=self.process_collector_tasks,
             args=(vt_queue, vt_child_pipe)
         )
         logger.info("Spining up otx process")
-        otx_main_pipe, otx_child_pipe = multiprocessing.Pipe()
-        otx_process = multiprocessing.Process(
+        otx_main_pipe, otx_child_pipe = multi.Pipe()
+        otx_process = multi.Process(
             target=self.process_collector_tasks,
             args=(otx_queue, otx_child_pipe)
         )
         logger.info("Spinning up robtex process")
-        rob_main_pipe, rob_child_pipe = multiprocessing.Pipe()
-        rob_process = multiprocessing.Process(
+        rob_main_pipe, rob_child_pipe = multi.Pipe()
+        rob_process = multi.Process(
             target=self.process_collector_tasks,
             args=(
                 rob_queue,
@@ -140,15 +146,15 @@ class IP_Checker():
         rob_process.start()
 
         for ip in ips:
-            multiprocessing.connection.wait([vt_main_pipe])
+            multi.connection.wait([vt_main_pipe])
             pipe_data = vt_main_pipe.recv()
             self.parse_pipe_data(pipe_data, use_ip=True)
 
-            multiprocessing.connection.wait([otx_main_pipe])
+            multi.connection.wait([otx_main_pipe])
             pipe_data = otx_main_pipe.recv()
             self.parse_pipe_data(pipe_data)
 
-            multiprocessing.connection.wait([rob_main_pipe])
+            multi.connection.wait([rob_main_pipe])
             pipe_data = rob_main_pipe.recv()
             self.parse_pipe_data(pipe_data)
 
@@ -167,7 +173,7 @@ class IP_Checker():
         rob_main_pipe.close()
         logger.info("Robtex tasks processed")
 
-    def parse_pipe_data(self, data, use_ip=False):
+    def parse_pipe_data(self, data: List[str], use_ip: bool=False) -> None:
         '''
         Takes in data from a piped collector result.
         Will attmpt to parse that data and send it to the appropriate modules.
@@ -195,7 +201,11 @@ class IP_Checker():
 
         self.report.write_report(report.getvalue())
 
-    def process_collector_tasks(self, queue, pipe):
+    def process_collector_tasks(
+        self,
+        queue: multi.Queue,
+        pipe: Connection
+    ) -> None:
         '''
         Attempts to process the task queue.
         Will send the results through the pipe as needed.
@@ -219,7 +229,11 @@ class IP_Checker():
             logger.info(f"Done processing {task}")
             pipe.send([ip, header, report])
 
-    def add_vt_tasks(self, queue, ips):
+    def add_vt_tasks(
+        self,
+        queue: multi.Queue,
+        ips: KeysView[Any]
+    ) -> multi.Queue:
         '''
         Adds a set of ip and collector to the queue
         for each ip in the global list of ips
@@ -236,7 +250,11 @@ class IP_Checker():
             queue.put([ip, collector])
         return queue
 
-    def add_otx_tasks(self, queue, ips):
+    def add_otx_tasks(
+        self,
+        queue: multi.Queue,
+        ips: KeysView[Any]
+    ) -> multi.Queue:
         '''
         Adds a set of ip and collector to the queue
         for each ip in the global list of ips
@@ -253,7 +271,11 @@ class IP_Checker():
             queue.put([ip, collector])
         return queue
 
-    def add_rob_tasks(self, queue, ips):
+    def add_rob_tasks(
+        self,
+        queue: multi.Queue,
+        ips: KeysView[Any]
+    ) -> multi.Queue:
         '''
         Adds a set of ip and collector to the queue
         for each ip in the global list of ips
@@ -274,11 +296,21 @@ class IP_Checker():
 #                       Record Stuff
 #   ========================================================================
 
-    def record_ips(self, ips):
-        self.report.write_record(json.dumps(ips, indent=4,
-                                            sort_keys=True))
+    def record_ips(self, ips: Dict[Any, Any]) -> None:
+        self.report.write_record(
+            json.dumps(
+                ips,
+                indent=4,
+                sort_keys=True
+            )
+        )
 
-    def filter_record_ips(self, given, record, display=True):
+    def filter_record_ips(
+        self,
+        given: Dict[str, str],
+        record: Dict[str, str],
+        display: bool=True
+    ) -> Dict:
         '''
         Will attempt to filter out the ips from the given
         set which are already in the recorded set.
