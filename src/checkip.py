@@ -100,6 +100,7 @@ class IP_Checker():
 #                       Collector Stuff
 #   ========================================================================
 
+
     def run_collector_pipeline(self, ips: KeysView[Any]) -> None:
         '''
         The `master` method for all collector
@@ -108,13 +109,9 @@ class IP_Checker():
         # queue up all collector tasks
         logger.info("Building collector task queues")
 
-        vt_queue: multi.Queue = multi.Queue()
-        otx_queue: multi.Queue = multi.Queue()
-        rob_queue: multi.Queue = multi.Queue()
-
-        vt_queue = self.add_vt_tasks(vt_queue, ips)
-        otx_queue = self.add_otx_tasks(otx_queue, ips)
-        rob_queue = self.add_rob_tasks(rob_queue, ips)
+        vt_queue = self.add_vt_tasks(multi.Queue(), ips)
+        otx_queue = self.add_otx_tasks(multi.Queue(), ips)
+        rob_queue = self.add_rob_tasks(multi.Queue(), ips)
 
         logger.info("Spining up vt child-process")
         vt_main_pipe, vt_child_pipe = multi.Pipe()
