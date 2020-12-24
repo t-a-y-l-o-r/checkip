@@ -1,0 +1,29 @@
+ipchecker - INFO - IP_Checker finished init
+ipchecker-ui - INFO - {'all_ips': False, 'silent': False, 'ip': '8.8.8.8', 'input_file': None}
+ipchecker - INFO - Building collector task queues
+ipchecker - INFO - Spining up vt child-process
+ipchecker - INFO - Spining up otx process
+ipchecker - INFO - Spinning up robtex process
+ipchecker - INFO - Processing vt tasts
+ipchecker - INFO - Processing otx tasks
+ipchecker - INFO - Processing robtext tasks
+urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): otx.alienvault.com:443
+urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.virustotal.com:443
+urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): freeapi.robtex.com:443
+urllib3.connectionpool - DEBUG - https://freeapi.robtex.com:443 "GET //ipquery/8.8.8.8 HTTP/1.1" 301 None
+urllib3.connectionpool - DEBUG - https://otx.alienvault.com:443 "GET /api/v1/indicators/IPv4//8.8.8.8/general HTTP/1.1" 200 None
+urllib3.connectionpool - DEBUG - https://otx.alienvault.com:443 "GET /api/v1/indicators/IPv4//8.8.8.8/reputation HTTP/1.1" 200 40
+urllib3.connectionpool - DEBUG - https://otx.alienvault.com:443 "GET /api/v1/indicators/IPv4//8.8.8.8/url_list HTTP/1.1" 200 874
+ipchecker - INFO - Header and report received
+ipchecker - INFO - Done processing ['8.8.8.8', <collectors.collectors.OTX_Collector object at 0x7f3fb8bd2b90>]
+urllib3.connectionpool - DEBUG - https://freeapi.robtex.com:443 "GET /ipquery/8.8.8.8 HTTP/1.1" 200 None
+ipchecker - INFO - Header and report received
+ipchecker - INFO - Done processing ['8.8.8.8', <collectors.collectors.Robtex_Collector object at 0x7f3fb8bd2c10>]
+urllib3.connectionpool - DEBUG - https://www.virustotal.com:443 "GET /api/v3/ip_addresses/8.8.8.8 HTTP/1.1" 200 30340
+urllib3.connectionpool - DEBUG - https://www.virustotal.com:443 "GET /api/v3/ip_addresses/8.8.8.8/resolutions?limit=20 HTTP/1.1" 200 9436
+ipchecker - INFO - Header and report received
+ipchecker - INFO - Done processing ['8.8.8.8', <collectors.collectors.Virus_Total_Collector object at 0x7f3fb8bd2a90>]
+ipchecker - INFO - Vt tasks processed
+ipchecker - INFO - OTX tasks processed
+ipchecker - INFO - Robtex tasks processed
+ipchecker - INFO - Recording ips
