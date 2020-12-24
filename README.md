@@ -14,16 +14,20 @@ API Application for a variety of security programs
 
 
 ## Up and Coming
-  * add flags for the following:
+  * QOL:
+    * setup an rc/dotfile per the unix convension
+    * reformat flags to be standardized (i.e. --force, --verbose, etc)
     * ip log file
-    * ouput report file
-  * database storage???
-  * URL option?
+    * output report file
+  * Features:
+    * URL option?
     * For VirusTotal long report, include:
       * Subdomains
       * Top 20 URLs
       * Communicating Files
       * Files Referring (if possible, filtered to MacOS type files only)
+  * Architecture stuff:
+    * local storage?
 
 ## Known Issues
 Mac users, please add this line to your shell's dotfile:
