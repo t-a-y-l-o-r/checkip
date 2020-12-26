@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Type
-from enum import Enum
+from enum import Enum, unique
 import requests
 import json
 import os
@@ -8,12 +8,43 @@ import os
 Author: Taylor Cochran
 '''
 
+#            ================================
+#                   Table of Contents
+#            ================================
+# 1. Globals
+# 2. Types
+# 3. Factory Stuff
+# 4. Collector
+# 5. Virus Total
+# 6. OTX
+# 7. Robtext
+#
+#
+
+'''
+            ================
+             Globals
+            ================
+'''
+
 VIRUS_TOTAL_KEY = os.environ["VT_KEY"]
 OTX_KEY = os.environ["OTX_KEY"]
 
 '''
             ================
-            Module Interface
+                Types
+            ================
+'''
+
+@unique
+class Collector_Types(Enum):
+    VIRUS_TOTAL = 1
+    OTX = 2
+    ROBTEX = 3
+
+'''
+            ================
+               Factories
             ================
 '''
 class Abstract_Collector_Factory(ABC):
@@ -21,38 +52,35 @@ class Abstract_Collector_Factory(ABC):
     Abstract factory for the collectors defined in this module
     '''
     @abstractmethod
-    def create_virus_total_collector(self, ip=None) -> "Collector":
+    def of(self, type: Collector_Types, ip: str=None)-> "Collector":
         pass
-
-    @abstractmethod
-    def create_otx_collector(self, ip=None) -> "Collector":
-        pass
-
-    @abstractmethod
-    def create_robtex_collector(self, ip=None) -> "Collector":
-        pass
-
 
 class Collector_Factory(Abstract_Collector_Factory):
     '''
     Concrete factory for the collectors defined within this module
     '''
-    def create_virus_total_collector(self, ip=None) -> "Collector":
-        return Virus_Total_Collector(ip=ip)
+    def of(self, typeOf: Collector_Types, ip: str=None) -> "Collector":
+        if typeOf == Collector_Types.VIRUS_TOTAL:
+            return Virus_Total_Collector(ip=ip)
+        elif typeOf == Collector_Types.OTX:
+            return OTX_Collector(ip=ip)
+        elif typeOf == Collector_Types.ROBTEX:
+            return Robtex_Collector(ip=ip)
+        else:
+            raise TypeError(f"Unknown collector type of {type(typeOf)}")
 
-    def create_otx_collector(self, ip=None) -> "Collector":
-        return OTX_Collector(ip=ip)
-
-    def create_robtex_collector(self, ip=None) -> "Collector":
-        return Robtex_Collector(ip=ip)
-
+'''
+            ================
+                Collector
+            ================
+'''
 
 class Collector(ABC):
     '''
     Defines the "interface" for the collector module
     All classes should override these methods
     '''
-    def __init__(self, ip=None):
+    def __init__(self, ip: str=None):
         self.ip = ip
 
     @abstractmethod

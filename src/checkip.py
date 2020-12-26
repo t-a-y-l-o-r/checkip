@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+from collectors.collectors import Collector, Collector_Types, Collector_Factory
 from multiprocessing.connection import Connection
 from typing import Any, Dict, KeysView, List, Tuple
-from collectors import collectors
 import multiprocessing as multi
 from report import report
 from reader import reader
@@ -64,10 +64,31 @@ class IP_Checker():
     def __init__(self):
         self.ui = ui.UI()
         self.report = report.Report_Builder()
-        self.factory = collectors.Collector_Factory()
+        self.factory = Collector_Factory()
+        self._collectors = None
         self.reader = reader.Reader()
         self.ips = list()
         logger.info("IP_Checker finished init")
+        
+#   ========================================================================
+#                       Propeties 
+#   ========================================================================
+
+    @property
+    def collectors(self):
+        '''
+        Manages the collectors definition
+        '''
+        if self._collectors:
+            return self._collectors
+        else:
+            col_list = []
+            for col_type in Collector_Types:
+                col_list.append(
+                    self.factory.of(col_type)
+                )
+            self._collectors = col_list
+            return self._collectors
 
 #   ========================================================================
 #                       Main Stuff
@@ -119,16 +140,16 @@ class IP_Checker():
 #                       Collector Process Stuff
 #   ========================================================================
 
-    def get_all_collectors(self) -> List[collectors.Collector]:
+    def all_collectors(self) -> List[Collector]:
         '''
         Provide a list of collectors for each type
         '''
-        collectors = [
-            self.factory.create_virus_total_collector(),
-            self.factory.create_otx_collector(),
-            self.factory.create_robtex_collector()
-        ]
-        return collectors
+        col_list = []
+        for col_type in Collector_Types:
+            col_list.append(
+                self.factory.of(col_type)
+            )
+        return col_list
 
     def process_pipe_data(
         self,
@@ -168,9 +189,8 @@ class IP_Checker():
         '''
         # queue up all collector tasks
         logger.info("Building collector task queues")
-        collectors = self.get_all_collectors()
         queues: List[multi.Queue] = []
-        for collector in collectors:
+        for collector in self.collectors:
             queues.append(
                 self.add_ip_tasks(multi.Queue(), ips, collector)
             )
@@ -257,7 +277,7 @@ class IP_Checker():
         self,
         queue: multi.Queue,
         ips: KeysView[Any],
-        collector: collectors.Collector
+        collector: Collector
     ) -> multi.Queue:
         '''
         Adds a set of ip and collector to the queue
