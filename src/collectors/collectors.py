@@ -37,7 +37,7 @@ OTX_KEY = os.environ["OTX_KEY"]
 '''
 
 @unique
-class Types(Enum):
+class Collector_Types(Enum):
     VIRUS_TOTAL = 1
     OTX = 2
     ROBTEX = 3
@@ -52,19 +52,19 @@ class Abstract_Collector_Factory(ABC):
     Abstract factory for the collectors defined in this module
     '''
     @abstractmethod
-    def of(self, type: Types, ip: str=None)-> "Collector":
+    def of(self, type: Collector_Types, ip: str=None)-> "Collector":
         pass
 
 class Collector_Factory(Abstract_Collector_Factory):
     '''
     Concrete factory for the collectors defined within this module
     '''
-    def of(self, typeOf: Types, ip: str=None) -> "Collector":
-        if typeOf == Types.VIRUS_TOTAL:
+    def of(self, typeOf: Collector_Types, ip: str=None) -> "Collector":
+        if typeOf == Collector_Types.VIRUS_TOTAL:
             return Virus_Total_Collector(ip=ip)
-        elif typeOf == Types.OTX:
+        elif typeOf == Collector_Types.OTX:
             return OTX_Collector(ip=ip)
-        elif typeOf == Types.ROBTEX:
+        elif typeOf == Collector_Types.ROBTEX:
             return Robtex_Collector(ip=ip)
         else:
             raise TypeError(f"Unknown collector type of {type(typeOf)}")

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+from collectors.collectors import Collector, Collector_Types, Collector_Factory
 from multiprocessing.connection import Connection
 from typing import Any, Dict, KeysView, List, Tuple
-from collectors import collectors
 import multiprocessing as multi
 from report import report
 from reader import reader
@@ -64,7 +64,7 @@ class IP_Checker():
     def __init__(self):
         self.ui = ui.UI()
         self.report = report.Report_Builder()
-        self.factory = collectors.Collector_Factory()
+        self.factory = Collector_Factory()
         self._collectors = None
         self.reader = reader.Reader()
         self.ips = list()
@@ -83,7 +83,7 @@ class IP_Checker():
             return self._collectors
         else:
             col_list = []
-            for col_type in collectors.Types:
+            for col_type in Collector_Types:
                 col_list.append(
                     self.factory.of(col_type)
                 )
@@ -140,12 +140,12 @@ class IP_Checker():
 #                       Collector Process Stuff
 #   ========================================================================
 
-    def all_collectors(self) -> List[collectors.Collector]:
+    def all_collectors(self) -> List[Collector]:
         '''
         Provide a list of collectors for each type
         '''
         col_list = []
-        for col_type in collectors.Types:
+        for col_type in Collector_Types:
             col_list.append(
                 self.factory.of(col_type)
             )
@@ -277,7 +277,7 @@ class IP_Checker():
         self,
         queue: multi.Queue,
         ips: KeysView[Any],
-        collector: collectors.Collector
+        collector: Collector
     ) -> multi.Queue:
         '''
         Adds a set of ip and collector to the queue
