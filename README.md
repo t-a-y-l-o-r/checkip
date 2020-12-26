@@ -1,5 +1,7 @@
 # checkip
-API Application for a variety of security programs
+A simple cli wrapper for a variety of security API tools.
+Primarily used to detect relations of ip addresses.
+Will attempt to resolve their known level of hostility per community standards.
 
 ## Flags and Usage
   _-ip_ {ipv4address} -- the flag to use when scanning a single ipv4address. Required if `-if` is not used.
