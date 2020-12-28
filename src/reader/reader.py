@@ -1,4 +1,5 @@
 from abc import (ABC, abstractmethod)
+from typing import List, Dict
 from io import StringIO
 import json
 import os
@@ -17,11 +18,11 @@ class Abstract_Reader(ABC):
     with by the controller class
     '''
     @abstractmethod
-    def read_input_file(self, file_path) -> list:
+    def read_input_file(self, file_path: str) -> List[str]:
         pass
 
     @abstractmethod
-    def read_record(self, file_path) -> dict:
+    def read_record(self, file_path: str) -> Dict[str, str]:
         pass
 
 
@@ -32,7 +33,7 @@ class Reader(Abstract_Reader):
     def __init__(self):
         self._reader = None
 
-    def read_input_file(self, file_path):
+    def read_input_file(self, file_path: str) -> List[str]:
         '''
         Implements the read_ips() function as defined
         in the Abstract_Reader() class.
@@ -53,7 +54,7 @@ class Reader(Abstract_Reader):
                     ip_list.append(ip)
         return ip_list
 
-    def read_record(self, file_path):
+    def read_record(self, file_path: str) -> Dict[str, str]:
         '''
         Implements the read_record function as defined
         in the Abstract_Reader() class.
@@ -72,5 +73,3 @@ class Reader(Abstract_Reader):
         with open(file_path, "r") as f:
             ips = f.read()
             return json.loads(ips)
-
-
