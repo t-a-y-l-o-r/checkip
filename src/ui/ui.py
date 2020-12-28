@@ -1,4 +1,5 @@
 from io import StringIO
+from typing import Dict
 import argparse
 import logging
 import json
@@ -21,7 +22,7 @@ logging.basicConfig(filename=".log",
 logger = logging.getLogger("ipchecker-ui")
 
 class UI():
-    def __init__(self):
+    def __init__(self) -> None:
         self.parser = argparse.ArgumentParser(
             description="Checks the given ip(s) for security concerns"
         )
@@ -67,7 +68,7 @@ class UI():
         self.all_ips = False
         self.silent = False
 
-    def args(self):
+    def args(self) -> None:
         '''
         Attempts to parse the command line arguments
         provided to the main
@@ -89,7 +90,7 @@ class UI():
         elif self.input_file is not None:
             self.validate_input_file(self.input_file)
 
-    def validate_ip(self, ip):
+    def validate_ip(self, ip: str) -> None:
         '''
         Validates the ip against a pattern
 
@@ -102,7 +103,7 @@ class UI():
                       format(RED, CLEAR, ip))
             sys.exit(1)
 
-    def validate_input_file(self, file_path):
+    def validate_input_file(self, file_path: str) -> None:
         '''
         Attempts to validat the given file path
         '''
@@ -112,7 +113,7 @@ class UI():
                 print("{0}[*] Warning:{1} `{2}` is not a valid file!".
                       format(RED, CLEAR, file_path))
 
-    def display(self, header, ip=None):
+    def display(self, header: str, ip: str=None) -> None:
         '''
         Builds the command line version of the report from the given header
         '''
@@ -126,7 +127,7 @@ class UI():
             print(ip_output.getvalue())
         print(header)
 
-    def display_excluded_ips(self, ips):
+    def display_excluded_ips(self, ips: Dict[str, str]) -> None:
         '''
         Will display the given set of ips
         which are NOT queued up to be scanned.
@@ -134,9 +135,9 @@ class UI():
         logger.debug(f"Ignoring the following ips: {ips}")
         if self.silent:
             return
-        ips = json.dumps(ips, indent=4, sort_keys=True)
-        print(
-        f"[*]{YELLOW} Notice:{CLEAR} the following ips will NOT be scanned: {ips}"
-        )
-
-
+        ips_str = json.dumps(ips, indent=4, sort_keys=True)
+        output = "".join([
+            f"[*]{YELLOW} Notice: {CLEAR} ",
+            f"the following ips will NOT be scanned: {ips_str}"
+        ])
+        print(output)
