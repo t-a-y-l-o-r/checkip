@@ -1,5 +1,5 @@
+from typing import Type, Optional, Dict, List, Any
 from abc import ABC, abstractmethod
-from typing import Type
 from enum import Enum, unique
 import requests
 import json
@@ -80,15 +80,15 @@ class Collector(ABC):
     Defines the "interface" for the collector module
     All classes should override these methods
     '''
-    def __init__(self, ip: str=None):
+    def __init__(self, ip: Optional[str]=None) -> None:
         self.ip = ip
 
     @abstractmethod
-    def header(self):
+    def header(self) -> Optional[str]:
         pass
 
     @abstractmethod
-    def report(self):
+    def report(self) -> Optional[str]:
         pass
 
 '''
@@ -107,42 +107,43 @@ class Virus_Total_Collector(Collector):
     Where ip is the ip and relationship is the additioanl
     data being requested
     '''
-    def __init__(self, ip=None):
+    def __init__(self, ip=None) -> None:
         super(Virus_Total_Collector, self).__init__(ip)
         self._session = requests.Session()
         self._session.headers.update({'x-apikey': VIRUS_TOTAL_KEY})
-        self._header = None
-        self._report = None
+        self._header: Optional[str] = None
+        self._report: Optional[str] = None
 
-    def header(self):
+    def header(self) -> Optional[str]:
         if self._header is None:
             self._call_and_parse_all()
         return self._header
 
-    def report(self):
+    def report(self) -> Optional[str]:
         if self._report is None:
             self._call_and_parse_all()
         return self._report
 
-    def _call_and_parse_all(self):
+    def _call_and_parse_all(self) -> None:
         response = self._call("ip")
-        self._parse_ip(response)
+        parsed_dict = self._parse_ip(response)
         response = self._call("resolutions")
-        self._parse_resolutions(response)
+        sites = self._parse_resolutions(response)
 
         self._header = "".join([
-            self._header,
+            parsed_dict["header"],
             "\n",
-            self._checked,
+            parsed_dict["checked"],
             "\n",
-            self._owner,
+            parsed_dict["owner"],
             "\n",
-            self._stats
+            parsed_dict["stats"]
         ])
-        self._report["sites"] = self._sites
-        self._report = json.dumps(self._report, sort_keys=True, indent=4)
+        report = json.loads(parsed_dict["report"])
+        report["sites"] = sites
+        self._report = json.dumps(report, sort_keys=True, indent=4)
 
-    def _call(self, call_type="ip", limit=20):
+    def _call(self, call_type: str="ip", limit: int=20) -> requests.Response:
         '''
         Call out to a given enpoint based on the call_type.
 
@@ -154,22 +155,22 @@ class Virus_Total_Collector(Collector):
 
         Returns the reponse if it determines it is valid
         '''
+        limit_str = str(limit)
         if call_type is None:
             raise ValueError("Call type cannot be none")
         if call_type == "ip":
             call_type = ""
-            limit = ""
+            limit_str = ""
         else:
             call_type = "/{}".format(call_type)
-            limit = "?limit={0}".format(limit)
-        report_url = [
+            limit_str = f"?limit={limit_str}"
+        report_url = "".join([
             'https://www.virustotal.com/',
             'api/v3/ip_addresses/',
-            self.ip,
+            str(self.ip),
             call_type,
-            limit,
-        ]
-        report_url = "".join(report_url)
+            limit_str,
+        ])
         response = self._session.get(report_url)
 
         code = response.status_code
@@ -182,7 +183,7 @@ class Virus_Total_Collector(Collector):
                 "Server reply: {0} Message: {1}".
                 format(code, response.text))
 
-    def _parse_ip(self, base):
+    def _parse_ip(self, base: requests.Response) -> Dict[str, str]:
         '''
         Parses the raw response body and converts it into a human
         readable format.
@@ -220,13 +221,15 @@ class Virus_Total_Collector(Collector):
             result = agency.get("result")
             if result != "clean" and result != "unrated":
                 report[(f"{key}")] = agency
-        self._header = header
-        self._checked = checked
-        self._owner = owner
-        self._stats = stats
-        self._report = report
+        return {
+            "header": header,
+            "checked": checked,
+            "owner": owner,
+            "stats": stats,
+            "report": json.dumps(report)
+        }
 
-    def _parse_resolutions(self, response):
+    def _parse_resolutions(self, response: requests.Response) -> List[str]:
         # get relations data
         sites = []
         relations_response = response.json()
@@ -235,7 +238,7 @@ class Virus_Total_Collector(Collector):
             attributes = site_data.get("attributes")
             host = attributes.get("host_name")
             sites.append(host)
-        self._sites = sites
+        return sites
 
 
 '''
@@ -253,35 +256,40 @@ class OTX_Collector(Collector):
     Where ip is the ip and section is the kind
     of data to query for. i.e. "general", "reputation", or "url_list"
     '''
-    def __init__(self, ip=None):
+    def __init__(self, ip: str=None) -> None:
         super(OTX_Collector, self).__init__(ip)
         self._session = requests.Session()
         self._session.headers.update({'X-OTX-API-KEY': OTX_KEY})
-        self._header = None
-        self._report = None
-        self._general = None
-        self._reputation = None
-        self._url_list = None
+        self._header: Optional[str] = None
+        self._report: Optional[str] = None
+        self._general: Optional[Dict[Any, Any]] = None
+        self._reputation: Optional[Dict[Any, Any]] = None
+        self._url_list: Optional[List[str]] = None
 
-    def header(self):
+    def header(self) -> Optional[str]:
         if self._header is None:
             self._call_and_parse_all()
         return self._header
 
-    def report(self):
+    def report(self) -> Optional[str]:
         if self._report is None:
             self._call_and_parse_all()
         return self._report
 
-    def _call_and_parse_all(self):
+    def _call_and_parse_all(self) -> None:
         # call everything and parse individually
         general = self._call(call_type="general")
-        self._parse_general(general)
+        self._general = self._parse_general(general)
         reputation = self._call(call_type="reputation")
-        self._parse_reputation(reputation)
+        self._reputation = self._parse_reputation(reputation)
+
         url_list = self._call(call_type="url_list")
-        self._parse_urls(url_list)
+        self._url_list = self._parse_urls(url_list)
         # convert into human readable
+        if self._general is None:
+            raise ValueError(
+                f"request response body cannot be None type!"
+            )
         self._header = "".join([
             "\n\t[OTX]\n\n",
             "[asn]: ",
@@ -295,18 +303,18 @@ class OTX_Collector(Collector):
             "\n[Type]: ",
             str(self._general.get("type_of_activities")),
         ])
-        self._report = {
+        report = {
             "last_seen": self._reputation.get("last_seen"),
             "type_of_activities": self._reputation.get("type_of_activities"),
             "domains": self._url_list
         }
         self._report = json.dumps(
-            self._report,
+            report,
             indent=4,
             sort_keys=True
         )
 
-    def _call(self, call_type=None):
+    def _call(self, call_type: str=None) -> requests.Response:
         '''
         Call out to a given enpoint based on the call_type.
         provides a response if possible
@@ -328,18 +336,18 @@ class OTX_Collector(Collector):
         else:
             raise ValueError("Invalid call type {0}".format(call_type))
 
-    def _parse_general(self, response):
+    def _parse_general(self, response: requests.Response) -> Dict[str, Any]:
         json = response.json()
         asn = json.get("asn")
         country_name = json.get("country_name")
         city = json.get("city")
-        self._general = {
+        return {
             "asn": asn,
             "country_name": country_name,
             "city": city,
         }
 
-    def _parse_reputation(self, response):
+    def _parse_reputation(self, response: requests.Response) -> Dict[str, Any]:
         json = response.json()
         reputation = json.get("reputation")
         threat_score = None
@@ -351,22 +359,23 @@ class OTX_Collector(Collector):
             type_of_activities = list(reputation.get("counts").keys())
             last_seen = reputation.get("last_seen")
             domains = reputation.get("domains")
-        self._reputation = {
+        return {
             "threat_score": threat_score,
             "type_of_activities": type_of_activities,
             "last_seen": last_seen,
             "domains": domains
         }
 
-    def _parse_urls(self, response):
+    def _parse_urls(self, response: requests.Response) -> List[str]:
         json = response.json()
-        self._url_list = []
         urls = json.get("url_list")
+        url_list = []
         domain = ""
         for url in urls:
             domain = url.get("domain")
             if domain != "" and domain is not None:
-                self._url_list.append(domain)
+                url_list.append(domain)
+        return url_list
 
 
 '''
@@ -384,23 +393,23 @@ class Robtex_Collector(Collector):
     Primarily used to cooberate related ip's and
     geo location data.
     '''
-    def __init__(self, ip=None):
+    def __init__(self, ip: str=None) -> None:
         super(Robtex_Collector, self).__init__(ip)
         self._session = requests.Session()
-        self._header = None
-        self._report = None
+        self._header: Optional[str] = None
+        self._report: Optional[str] = None
 
-    def header(self):
+    def header(self) -> Optional[str]:
         if self._header is None:
             self._call_and_parse_all()
         return self._header
 
-    def report(self):
+    def report(self) -> Optional[str]:
         if self._report is None:
             self._call_and_parse_all()
         return self._report
 
-    def _call_and_parse_all(self):
+    def _call_and_parse_all(self) -> None:
         call_dict = self._call().json()
         self._header = "".join([
             "\n\n\t[Robtex]\n\n[asname]: ",
@@ -422,7 +431,7 @@ class Robtex_Collector(Collector):
             "activeDNS": call_dict.get("act")
         }, indent=4, sort_keys=True)
 
-    def _call(self, call_type="ip"):
+    def _call(self, call_type: str="ip") -> requests.Response:
         '''
         Calls out to the robtext end point
         https://freeapi.robtex.com/ipquery/{ip}
