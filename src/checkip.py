@@ -69,9 +69,9 @@ class IP_Checker():
         self.reader = reader.Reader()
         self.ips = list()
         logger.info("IP_Checker finished init")
-        
+
 #   ========================================================================
-#                       Propeties 
+#                       Propeties
 #   ========================================================================
 
     @property

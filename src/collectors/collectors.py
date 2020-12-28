@@ -52,7 +52,7 @@ class Abstract_Collector_Factory(ABC):
     Abstract factory for the collectors defined in this module
     '''
     @abstractmethod
-    def of(self, type: Collector_Types, ip: str=None)-> "Collector":
+    def of(self, type: Collector_Types, ip: str=None) -> "Collector":
         pass
 
 class Collector_Factory(Abstract_Collector_Factory):
@@ -444,4 +444,3 @@ class Robtex_Collector(Collector):
             raise ValueError(
                 "Server reply: {0} Message: {1}".
                 format(code, response.text))
-
