@@ -35,22 +35,27 @@ Test IPs:
 #   ========================================================================
 #                       Table of Contents
 #   ========================================================================
-# 1. IP_Checker
-# 2. The `main` for the pipeline
-# 3. Collector Process
-# 4. Record
+# 1. Globals
+# 2. IP_Checker
+# 3. The `main` for the pipeline
+# 4. Collector Process
+# 5. Record
 #
 #
 #
+#   ========================================================================
+#                       Description
+#   ========================================================================
+# This module is the "core" of the program.
 #
-#
-#
-#
-#
-#
-#
+# This file should handle any inter-module communication, as well as managing
+# the main data-pipeline for the entire system. You can think of it as the
+# back-bone.
 #
 
+#   ========================================================================
+#                       Globals
+#   ========================================================================
 
 PROCESSES = 1
 logging.basicConfig(
@@ -59,6 +64,10 @@ logging.basicConfig(
     format="%(name)s - %(levelname)s - %(message)s",
     level=logging.DEBUG)
 logger = logging.getLogger("ipchecker")
+
+#   ========================================================================
+#                       IP_Checker
+#   ========================================================================
 
 class IP_Checker():
     def __init__(self):
@@ -69,10 +78,6 @@ class IP_Checker():
         self.reader = reader.Reader()
         self.ips = list()
         logger.info("IP_Checker finished init")
-
-#   ========================================================================
-#                       Propeties
-#   ========================================================================
 
     @property
     def collectors(self):
