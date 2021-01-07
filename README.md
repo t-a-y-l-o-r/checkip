@@ -27,13 +27,11 @@ The keys can be provided through the configuration engine in one of the followin
 If the `config.ini` setup is used, the following pattern headers and keys are required:
 
 ```
-
 [VIRUS_TOTAL]
 key=abc123
 
 [OTX]
 key=321cba
-
 ```
 
 ## Up and Coming
