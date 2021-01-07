@@ -41,7 +41,7 @@ USER_DEF_CONFIG: Optional[str] = utility.environ_or_default(
 )
 HOME_FILE_PATH: str = "".join([
     os.environ["HOME"],
-    "/.check_up",
+    "/.checkip",
     "/config.ini"
 ])
 DEFAULT_CONFIG_LOCATION: str = "config.ini"
@@ -97,7 +97,7 @@ class Config():
         Defines where the config file is located.
         Priority is as follows:
         1. User defined shell var
-        2. Home Directory dot folder: `~/.check_ip/config.ini`
+        2. Home Directory dot folder: `~/.checkip/config.ini`
         3. Local file: `local_dir/config.ini`
         '''
         if self._file:
