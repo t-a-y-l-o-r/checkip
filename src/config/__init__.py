@@ -62,7 +62,7 @@ OTX_HEADER: str = "OTX"
 OTX_KEYS: Set[str] = {
     KEY
 }
-OTX_ENVIRON: str = "OXT_KEY"
+OTX_ENVIRON: str = "OTX_KEY"
 USER_DEF_OTX: Optional[str] = utility.environ_or_default(
     OTX_ENVIRON,
     None
@@ -80,6 +80,7 @@ class Config():
         self._config: Optional[ConfigParser] = None
         self._file: Optional[str] = None
         self._vt_key: Optional[str] = None
+        self._otx_key: Optional[str] = None
 
     @property
     def config(self) -> ConfigParser:
