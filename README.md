@@ -24,7 +24,7 @@ The keys can be provided through the configuration engine in one of the followin
 2. `~/.checkip/config.ini`
 3. `./config.ini` where `./` is the active directory for the program
 
-If the `config.ini` setup is used, the following pattern headers and keys are required:
+If the `config.ini` setup is used, the following headers and keys are required:
 
 ```
 [VIRUS_TOTAL]
