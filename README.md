@@ -36,8 +36,6 @@ key=321cba
 
 ## Up and Coming
   * QOL:
-    * setup an rc/dotfile per the unix convention
-      * allow for inital config / auto-detect of existing dot file structure
     * reformat flags to be standardized (i.e. --force, --verbose, etc)
     * ip log file
     * output report file
