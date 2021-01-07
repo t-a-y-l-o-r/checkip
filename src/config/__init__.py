@@ -41,7 +41,7 @@ USER_DEF_CONFIG: Optional[str] = utility.environ_or_default(
 )
 HOME_FILE_PATH: str = "".join([
     os.environ["HOME"],
-    "/.check_up",
+    "/.checkip",
     "/config.ini"
 ])
 DEFAULT_CONFIG_LOCATION: str = "config.ini"
@@ -62,7 +62,7 @@ OTX_HEADER: str = "OTX"
 OTX_KEYS: Set[str] = {
     KEY
 }
-OTX_ENVIRON: str = "OXT_KEY"
+OTX_ENVIRON: str = "OTX_KEY"
 USER_DEF_OTX: Optional[str] = utility.environ_or_default(
     OTX_ENVIRON,
     None
@@ -80,6 +80,7 @@ class Config():
         self._config: Optional[ConfigParser] = None
         self._file: Optional[str] = None
         self._vt_key: Optional[str] = None
+        self._otx_key: Optional[str] = None
 
     @property
     def config(self) -> ConfigParser:
@@ -96,7 +97,7 @@ class Config():
         Defines where the config file is located.
         Priority is as follows:
         1. User defined shell var
-        2. Home Directory dot folder: `~/.check_ip/config.ini`
+        2. Home Directory dot folder: `~/.checkip/config.ini`
         3. Local file: `local_dir/config.ini`
         '''
         if self._file:
