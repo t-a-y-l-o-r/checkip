@@ -14,6 +14,27 @@ Will attempt to resolve their known level of hostility per community standards.
 
   _-h_ --help -- displays a list of all flags and basic usage
 
+## Configuration
+OTX and VirusTotal api keys must be used for this program to run.
+Please obtain these from their offical sites for personal use.
+
+The keys can be provided through the configuration engine in one of the following ways:
+(Order of priority)
+1. Environ keys: `VIRUS_TOTAL_KEY` and `OTX_KEY` respectively
+2. `~/.checkip/config.ini`
+3. `./config.ini` where `./` is the active directory for the program
+
+If the `config.ini` setup is used, the following pattern headers and keys are required:
+
+```
+
+[VIRUS_TOTAL]
+key=abc123
+
+[OTX]
+key=321cba
+
+```
 
 ## Up and Coming
   * QOL:
