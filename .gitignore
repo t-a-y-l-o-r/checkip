@@ -1,4 +1,5 @@
 # project specific stuff
+config.ini
 record.json
 report.json
 .log
