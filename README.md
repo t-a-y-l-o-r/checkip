@@ -40,11 +40,9 @@ key=321cba
 
 ## Up and Coming
   * QOL:
-    * reformat flags to be standardized (i.e. --force, --verbose, etc)
-    * ip log file
     * output report file
-  * Features:
     * ivp6 addresses
+  * Features:
     * URL option?
     * For VirusTotal long report, include:
       * Subdomains
