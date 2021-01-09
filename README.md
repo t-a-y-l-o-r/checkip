@@ -20,7 +20,8 @@ Will attempt to resolve their known level of hostility per community standards.
 
 ## Configuration
 OTX and VirusTotal api keys must be used for this program to run.
-Please obtain these from their offical sites for personal use.
+Obtain these from their offical sites for personal use.
+NOTE: Please be mindful and respectful of their TOS.
 
 The keys can be provided through the configuration engine in one of the following ways:
 (Order of priority)
