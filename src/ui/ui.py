@@ -15,10 +15,12 @@ YELLOW = "\033[93m"
 CLEAR = "\033[0m"
 
 
-logging.basicConfig(filename=".log",
-                    filemode="w",
-                    format="%(name)s - %(levelname)s - %(message)s",
-                    level=logging.DEBUG)
+logging.basicConfig(
+    filename=".log",
+    filemode="w",
+    format="%(name)s - %(levelname)s - %(message)s",
+    level=logging.DEBUG
+)
 logger = logging.getLogger("ipchecker-ui")
 
 class UI():
