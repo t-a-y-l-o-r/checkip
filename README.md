@@ -9,8 +9,12 @@ Will attempt to resolve their known level of hostility per community standards.
   _-if_ {filepath} --input-file -- the flag to use when scanning multiple
                                       ipv4addresses. Required if `-ip` is not used
 
-  _-ap_ --all-ips -- ensures all given ips are scanned,
-			even when a record exists (think `--force`)
+  _-f_ --force -- ensures all given ips are scanned,
+			even when a record exists
+
+  _-s_ --silent -- runs without sending anything to standardIO
+
+  _-v_ --verbose -- runs with extra output
 
   _-h_ --help -- displays a list of all flags and basic usage
 
