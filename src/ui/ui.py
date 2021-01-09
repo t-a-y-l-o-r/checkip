@@ -15,10 +15,12 @@ YELLOW = "\033[93m"
 CLEAR = "\033[0m"
 
 
-logging.basicConfig(filename=".log",
-                    filemode="w",
-                    format="%(name)s - %(levelname)s - %(message)s",
-                    level=logging.DEBUG)
+logging.basicConfig(
+    filename=".log",
+    filemode="w",
+    format="%(name)s - %(levelname)s - %(message)s",
+    level=logging.DEBUG
+)
 logger = logging.getLogger("ipchecker-ui")
 
 class UI():
@@ -27,8 +29,8 @@ class UI():
             description="Checks the given ip(s) for security concerns"
         )
         self.parser.add_argument(
-            "-ap",
-            "--all-ips",
+            "-f",
+            "--force",
             action="store_true",
             help="".join([
                 "Ignores the unique ip filtering. Ensuring",
@@ -63,6 +65,14 @@ class UI():
                 "Required if `-ip` is not set."
             ])
         )
+        self.parser.add_argument(
+            "-v",
+            "--verbose"<
+            action="store_true",
+            help="".join([
+                "Ensures additional information is output"
+            ])
+        )
         self.ip = None
         self.input_file = None
         self.all_ips = False
@@ -82,7 +92,7 @@ class UI():
             self.input_file = args["input_file"]
         if "input_file" in keys:
             input_fule = args["input_file"]
-        self.all_ips = args["all_ips"]
+        self.all_ips = args["force"]
         self.silent = args["silent"]
 
         if self.ip is not None:
