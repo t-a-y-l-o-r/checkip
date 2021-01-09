@@ -2,6 +2,7 @@ from io import StringIO
 from typing import Dict
 import argparse
 import logging
+import socket
 import json
 import sys
 import os
@@ -54,6 +55,16 @@ class UI():
             ])
         )
         self.parser.add_argument(
+            "-u",
+            "--host",
+            action="store",
+            metavar="--host",
+            type=str,
+            help="".join([
+                "The host to check for security concners."
+            ])
+        )
+        self.parser.add_argument(
             "-if",
             "--input-file",
             action="store",
@@ -88,10 +99,15 @@ class UI():
         keys = args.keys()
         if "ip" in keys:
             self.ip = args["ip"]
-        if "input_file" in keys:
+        elif "input_file" in keys:
             self.input_file = args["input_file"]
-        if "input_file" in keys:
-            input_fule = args["input_file"]
+        elif "host" in keys:
+            try:
+                host_str = args["host"]
+                self.ip = socket.gethostbyname(host_str)
+            except Exception as e:
+                print(f"[*] Warning, unable to resolve host: {host_str}")
+
         self.all_ips = args["force"]
         self.silent = args["silent"]
 
