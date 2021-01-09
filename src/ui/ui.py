@@ -65,6 +65,14 @@ class UI():
                 "Required if `-ip` is not set."
             ])
         )
+        self.parser.add_argument(
+            "-v",
+            "--verbose"<
+            action="store_true",
+            help="".join([
+                "Ensures additional information is output"
+            ])
+        )
         self.ip = None
         self.input_file = None
         self.all_ips = False
