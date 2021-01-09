@@ -106,11 +106,10 @@ class IP_Checker():
         Will attempt to validate that all necessary setup
         has completed.
         '''
-        self.ui.args()
         if self.ui.ip is not None:
             self.ips.append(self.ui.ip)
-        elif self.ui.input_file is not None:
-            self.ips = self.reader.read_input_file(self.ui.input_file)
+        elif self.ui.ip_file is not None:
+            self.ips = self.reader.read_input_file(self.ui.ip_file)
         else:
             logger.warning("No -if or -ip flag given")
             self.ui.parser.print_help()
