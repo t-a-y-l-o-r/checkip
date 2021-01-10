@@ -154,6 +154,12 @@ class UI():
 
     @property
     def ip(self) -> Optional[str]:
+        '''
+        Provides the given ipv4 address. Priority is as follows:
+
+        1. An ipv4 value provided by the `-ip` flag
+        2. A resolved host ip address per the `--host` flag
+        '''
         if self._ip:
             return self._ip
         else:
@@ -171,8 +177,20 @@ class UI():
                     raise ValueError(
                         f"[*] Unable to resolve host name: {self.args['host']}"
                     )
-            self._validate_ip(self._ip)
+            passed = self._validate_ip(self._ip)
+            if not passed: # exit on bad ip
+                self._bad_ip_exit()
             return self._ip
+
+    def _bad_ip_exit(self) -> None:
+        if not self.silent:
+            logger.debug(f"Invalid ipv4 address: {ip}")
+            print("".join([
+                f"{RED}[*] Warning:{CLEAR} ",
+                f"{ip} is an invalid ipv4 address"
+            ]))
+        if not self._config.testing:
+            sys.exit(1)
 
     @property
     def ip_file(self) -> Optional[str]:
@@ -201,21 +219,13 @@ class UI():
 
         IPV4. ###.###.###.###
         '''
-        passed = True
         if not ip:
-            passed = False
-        elif not re.compile("(\\d+\\.){3}(\\d+)").match(ip):
-           passed = False
+            return False
+        elif not re.compile("(\\d+\\.){3}(\\d+)").match(str(ip)):
+            return False
+        else:
+            return True
 
-        if not passed:
-            if not self.silent:
-                logger.debug(f"Invalid ipv4 address: {ip}")
-                print("".join([
-                    f"{RED}[*] Warning:{CLEAR} ",
-                    f"{ip} is an invalid ipv4 address"
-                ]))
-            if not self._config.testing:
-                sys.exit(1)
 
     def _validate_ip_file(self, file_path: Optional[str]) -> None:
         '''

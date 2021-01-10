@@ -19,7 +19,7 @@ import pytest
 #   ========================================================================
 #                       Globals
 #   ========================================================================
-UI_EXPECETED_ARGS = {
+UI_EXPECTED_ARGS = {
     "ip",
     "input_file",
     "host",
@@ -46,10 +46,10 @@ def test_argument_setup() -> None:
     ui_obj = ui.UI(config=conf)
     args = set(ui_obj.args.keys())
     message = "".join([
-        f"EXPECTED: {UI_EXPECETED_ARGS} does not match ",
+        f"EXPECTED: {UI_EXPECTED_ARGS} does not match ",
         f"ACTUAL: {args} for UI(): {ui_obj}"
     ])
-    assert UI_EXPECETED_ARGS == args, message
+    assert UI_EXPECTED_ARGS == args, message
 
 #   ========================================================================
 #                       IP Parsing
@@ -160,3 +160,57 @@ def test_ip_from_host_failure() -> None:
             print(f"host: {host}")
             ip = ui_obj.ip
             print("error did not happen")
+
+def test_ip_validation() -> None:
+    '''
+    Ensures ip validation works for valid ip addresses
+    '''
+    ip_list = [
+        "0.0.0.0",
+        "1.1.1.1",
+        "8.8.8.8",
+        "127.0.0.1"
+    ]
+    for ip in ip_list:
+        conf = ui.UI_Config(
+            testing=True,
+            args=[
+            "-ip",
+            ip
+            ]
+        )
+        ui_obj = ui.UI(config=conf)
+        expected = True
+        actual = ui_obj._validate_ip(ip)
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
+
+def test_ip_validation_failure() -> None:
+    '''
+    Ensures ip validation fails for invalid ip addresses
+    '''
+    ip_list = [
+        "aavs.0.0.0",
+        "lashdlasd",
+        None,
+        123
+    ]
+    for ip in ip_list:
+        conf = ui.UI_Config(
+            testing=True,
+            args=[
+            "-ip",
+            ip
+            ]
+        )
+        ui_obj = ui.UI(config=conf)
+        expected = False
+        actual = ui_obj._validate_ip(ip)
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
