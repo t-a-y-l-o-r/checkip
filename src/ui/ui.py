@@ -167,8 +167,10 @@ class UI():
                 try:
                     self._ip = socket.gethostbyname(self.args["host"])
                 except socket.gaierror as e:
-                    print(f"[*] Unable to resolve host name: {self.args['host']}")
                     logger.warning(e)
+                    raise ValueError(
+                        f"[*] Unable to resolve host name: {self.args['host']}"
+                    )
             self._validate_ip(self._ip)
             return self._ip
 

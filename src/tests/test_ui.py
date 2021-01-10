@@ -1,5 +1,6 @@
 from ui import ui
 import socket
+import pytest
 
 #   ========================================================================
 #                       Table of Contents
@@ -135,3 +136,27 @@ def test_ip_from_host() -> None:
             f"ACTUAL: {ui_obj.ip} for UI(): {ui_obj}"
         ])
         assert ui_obj.ip == ip, message
+
+def test_ip_from_host_failure() -> None:
+    '''
+    Ensures the ip property throws and error
+    '''
+    host_list = [
+        "google///.com",
+        "nmap.comasdasldjnhasd",
+        "asdhajlsdnljsagithub.com",
+        "htttp://gitlab.com.com.com.com"
+    ]
+    for host in host_list:
+        conf = ui.UI_Config(
+            testing=True,
+            args=[
+            "--host",
+            host
+            ]
+        )
+        ui_obj = ui.UI(config=conf)
+        with pytest.raises(ValueError):
+            print(f"host: {host}")
+            ip = ui_obj.ip
+            print("error did not happen")
