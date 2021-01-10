@@ -54,4 +54,29 @@ def test_argument_setup() -> None:
 #   ========================================================================
 
 
-def
+def test_ip_already_set() -> None:
+    '''
+    Tests the base case for the ip property
+    Ensuring the inner value is always provided when set
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+        "-ip",
+        "0.0.0.0"
+        ]
+    )
+    ui_obj = ui.UI(config=conf)
+    ip_list = [
+        "0.0.0.0",
+        "1.1.1.1",
+        "8.8.8.8",
+        "127.0.0.1"
+    ]
+    for ip in ip_list:
+        ui_obj._ip = ip
+        message = "".join([
+            f"EXPECTED: {ip} does not match ",
+            f"ACTUAL: {ui_obj.ip} for UI(): {ui_obj}"
+        ])
+        assert ui_obj.ip == ip, message
