@@ -1,4 +1,5 @@
 from ui import ui
+import socket
 
 #   ========================================================================
 #                       Table of Contents
@@ -101,6 +102,33 @@ def test_ip_raw_ip() -> None:
             ip
             ]
         )
+        ui_obj = ui.UI(config=conf)
+        message = "".join([
+            f"EXPECTED: {ip} does not match ",
+            f"ACTUAL: {ui_obj.ip} for UI(): {ui_obj}"
+        ])
+        assert ui_obj.ip == ip, message
+
+def test_ip_from_host() -> None:
+    '''
+    Ensures the ip property is identical to the
+    ip resolved for a user input url
+    '''
+    host_list = [
+        "google.com",
+        "nmap.com",
+        "github.com",
+        "gitlab.com"
+    ]
+    for host in host_list:
+        conf = ui.UI_Config(
+            testing=True,
+            args=[
+            "--host",
+            host
+            ]
+        )
+        ip = socket.gethostbyname(host)
         ui_obj = ui.UI(config=conf)
         message = "".join([
             f"EXPECTED: {ip} does not match ",
