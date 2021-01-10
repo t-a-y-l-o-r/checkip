@@ -179,10 +179,10 @@ class UI():
                     )
             passed = self._validate_ip(self._ip)
             if not passed: # exit on bad ip
-                self._bad_ip_exit()
+                self._bad_ip_exit(self._ip)
             return self._ip
 
-    def _bad_ip_exit(self) -> None:
+    def _bad_ip_exit(self, ip) -> None:
         if not self.silent:
             logger.debug(f"Invalid ipv4 address: {ip}")
             print("".join([
@@ -213,7 +213,7 @@ class UI():
             self._all_ips = "force" in keys
             return self._all_ips
 
-    def _validate_ip(self, ip: Optional[str]) -> None:
+    def _validate_ip(self, ip: Optional[str]) -> bool:
         '''
         Validates the ip against a pattern
 
