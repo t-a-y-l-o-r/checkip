@@ -9,6 +9,8 @@ Will attempt to resolve their known level of hostility per community standards.
   _-if_ {filepath} --input-file -- the flag to use when scanning multiple
                                       ipv4addresses. Required if `-ip` is not used
 
+  _-u_ {url} --host -- any valid url to resolve as an ip address
+
   _-f_ --force -- ensures all given ips are scanned,
 			even when a record exists
 
@@ -45,7 +47,6 @@ key=321cba
     * output report file
     * ivp6 addresses
   * Features:
-    * URL option?
     * For VirusTotal long report, include:
       * Subdomains
       * Top 20 URLs
