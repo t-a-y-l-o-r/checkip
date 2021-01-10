@@ -1,15 +1,32 @@
 from io import StringIO
-from typing import Dict
+from typing import Dict, Any, Optional
 import argparse
 import logging
+import socket
 import json
 import sys
 import os
 import re
-'''
-Author: Taylor Cochran
-Since:
-'''
+#   ========================================================================
+#                       Table of Contents
+#   ========================================================================
+# 1. Globals
+# 2. UI - Class
+#
+#
+#
+#   ========================================================================
+#                       Description
+#   ========================================================================
+# This module is the "user interface" of the program.
+#
+# It primarily handles and parses the argument input from the user.
+#
+
+#   ========================================================================
+#                       Globals
+#   ========================================================================
+
 RED = "\033[91m"
 YELLOW = "\033[93m"
 CLEAR = "\033[0m"
@@ -23,27 +40,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger("ipchecker-ui")
 
+#   ========================================================================
+#                       UI - Class
+#   ========================================================================
+
 class UI():
     def __init__(self) -> None:
-        self.parser = argparse.ArgumentParser(
+        self._parser = argparse.ArgumentParser(
             description="Checks the given ip(s) for security concerns"
         )
-        self.parser.add_argument(
-            "-f",
-            "--force",
-            action="store_true",
-            help="".join([
-                "Ignores the unique ip filtering. Ensuring",
-                "all given ips will be scanned"
-            ])
-        )
-        self.parser.add_argument(
-            "-s",
-            "--silent",
-            action="store_true",
-            help="Will stop all stdIO from printing."
-        )
-        self.parser.add_argument(
+        self._parser.add_argument(
             "-ip",
             action="store",
             metavar="--ip",
@@ -53,7 +59,7 @@ class UI():
                 "Required if `-if` is not set"
             ])
         )
-        self.parser.add_argument(
+        self._parser.add_argument(
             "-if",
             "--input-file",
             action="store",
@@ -65,63 +71,134 @@ class UI():
                 "Required if `-ip` is not set."
             ])
         )
-        self.parser.add_argument(
+        self._parser.add_argument(
+            "-u",
+            "--host",
+            action="store",
+            metavar="--host",
+            type=str,
+            help="".join([
+                "The host to check for security concners.",
+                "Required if no ip is provided"
+            ])
+        )
+        self._parser.add_argument(
+            "-f",
+            "--force",
+            action="store_true",
+            help="".join([
+                "Ignores the unique ip filtering. Ensuring",
+                "all given ips will be scanned"
+            ])
+        )
+        self._parser.add_argument(
+            "-s",
+            "--silent",
+            action="store_true",
+            help="Will stop all stdIO from printing."
+        )
+        self._parser.add_argument(
             "-v",
-            "--verbose"<
+            "--verbose",
             action="store_true",
             help="".join([
                 "Ensures additional information is output"
             ])
         )
-        self.ip = None
-        self.input_file = None
-        self.all_ips = False
+        self._ip: Optional[Any] = None
+        self._ip_file: Optional[str] = None
+        self._all_ips: Optional[bool] = None
         self.silent = False
+        self._args: Optional[Dict[Any, Any]] = None
 
-    def args(self) -> None:
-        '''
-        Attempts to parse the command line arguments
-        provided to the main
-        '''
-        args = vars(self.parser.parse_args())
-        logger.info(args)
-        keys = args.keys()
-        if "ip" in keys:
-            self.ip = args["ip"]
-        if "input_file" in keys:
-            self.input_file = args["input_file"]
-        if "input_file" in keys:
-            input_fule = args["input_file"]
-        self.all_ips = args["force"]
-        self.silent = args["silent"]
+    @property
+    def args(self) -> Dict[Any, Any]:
+        if self._args:
+            return self._args
+        else:
+            self._args = vars(self._parser.parse_args())
+            return self._args
 
-        if self.ip is not None:
-            self.validate_ip(self.ip)
-        elif self.input_file is not None:
-            self.validate_input_file(self.input_file)
+    @property
+    def ip(self) -> Optional[str]:
+        if self._ip:
+            return self._ip
+        else:
+            keys = self.args.keys()
+            has_raw_ip = "ip" in keys and self.args["ip"]
+            has_host = "host" in keys and self.args["host"]
 
-    def validate_ip(self, ip: str) -> None:
+            if has_raw_ip:
+                self._ip = self.args["ip"]
+            elif has_host:
+                try:
+                    self._ip = socket.gethostbyname(self.args["host"])
+                except socket.gaierror as e:
+                    print(f"[*] Unable to resolve host name: {self.args['host']}")
+                    logger.warning(e)
+            self._validate_ip(self._ip)
+            return self._ip
+
+    @property
+    def ip_file(self) -> Optional[str]:
+        if self._ip_file:
+            return self._ip_file
+        else:
+            keys = self.args.keys()
+            has_file = "input_file" in keys and self.args["input_file"]
+            if has_file:
+                self._ip_file = self.args["input_file"]
+                self._validate_ip_file(self._ip_file)
+            return self._ip_file
+
+    @property
+    def all_ips(self) -> bool:
+        if self._all_ips is not None:
+            return self._all_ips
+        else:
+            keys = self.args.keys()
+            self._all_ips = "force" in keys
+            return self._all_ips
+
+    def _validate_ip(self, ip: Optional[str]) -> None:
         '''
         Validates the ip against a pattern
 
         IPV4. ###.###.###.###
         '''
-        if not re.compile("(\\d+\\.){3}(\\d+)").match(ip):
+        passed = True
+        if not ip:
+            passed = False
+        elif not re.compile("(\\d+\\.){3}(\\d+)").match(ip):
+           passed = False
+
+        if not passed:
             if not self.silent:
                 logger.debug(f"Invalid ipv4 address: {ip}")
-                print("{0}[*] Warning:{1} `{2}` is an invalid ipv4 address".
-                      format(RED, CLEAR, ip))
+                print("".join([
+                    f"{RED}[*] Warning:{CLEAR} ",
+                    f"{ip} is an invalid ipv4 address"
+                ]))
             sys.exit(1)
 
-    def validate_input_file(self, file_path: str) -> None:
+    def _validate_ip_file(self, file_path: Optional[str]) -> None:
         '''
         Attempts to validat the given file path
         '''
-        if not os.path.isfile(file_path):
+        passed = True
+        if not file_path:
+            passed = False
+        elif not os.path.isfile(file_path):
+            passed = False
+
+        if not passed:
             if not self.silent:
                 logger.debug(f"Invalid file: {file_path}")
-                print("{0}[*] Warning:{1} `{2}` is not a valid file!".
-                      format(RED, CLEAR, file_path))
+                print("".join([
+                    f"{RED}[*] Warning:{CLEAR} ",
+                    f"{file_path} is not a valid file!"
+                ]))
+            sys.exit(1)
 
     def display(self, header: str, ip: str=None) -> None:
         '''
