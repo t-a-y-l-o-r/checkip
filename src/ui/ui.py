@@ -1,5 +1,5 @@
 from io import StringIO
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import argparse
 import logging
 import socket
@@ -11,7 +11,8 @@ import re
 #                       Table of Contents
 #   ========================================================================
 # 1. Globals
-# 2. UI - Class
+# 2. UI_Config - Class
+# 3. UI - Class
 #
 #
 #
@@ -41,14 +42,39 @@ logging.basicConfig(
 logger = logging.getLogger("ipchecker-ui")
 
 #   ========================================================================
+#                       UI_Config - Class
+#   ========================================================================
+
+class UI_Config():
+    def __init__(self, testing=False, args=None):
+        self.testing = testing
+        self._args: Optional[List[str]] = args
+
+    @property
+    def args(self) -> Optional[List[str]]:
+        '''
+        Provides arguments to be ingested by the ui engine, if they exist
+        '''
+        return self._args
+
+
+#   ========================================================================
 #                       UI - Class
 #   ========================================================================
 
 class UI():
-    def __init__(self) -> None:
+    def __init__(self, config=UI_Config()) -> None:
+        self._config = config
+        self._ip: Optional[Any] = None
+        self._ip_file: Optional[str] = None
+        self._all_ips: Optional[bool] = None
+        self.silent = False
+
         self._parser = argparse.ArgumentParser(
             description="Checks the given ip(s) for security concerns"
         )
+        self._args: Optional[Dict[Any, Any]] = None
+
         self._parser.add_argument(
             "-ip",
             action="store",
@@ -105,18 +131,25 @@ class UI():
                 "Ensures additional information is output"
             ])
         )
-        self._ip: Optional[Any] = None
-        self._ip_file: Optional[str] = None
-        self._all_ips: Optional[bool] = None
-        self.silent = False
-        self._args: Optional[Dict[Any, Any]] = None
 
     @property
     def args(self) -> Dict[Any, Any]:
+        '''
+        Decides how to get the user provided arguments from the inital run.
+
+        Will provide the arguments as a dict of {flag: value} pairs
+        '''
         if self._args:
             return self._args
         else:
-            self._args = vars(self._parser.parse_args())
+            # system provided configuration arguments take precedent
+            if self._config.args:
+                self._args = vars(self._parser.parse_args(
+                    self._config.args
+                ))
+            else:
+                # otherwise accept the user flags
+                self._args = vars(self._parser.parse_args())
             return self._args
 
     @property
@@ -179,7 +212,8 @@ class UI():
                     f"{RED}[*] Warning:{CLEAR} ",
                     f"{ip} is an invalid ipv4 address"
                 ]))
-            sys.exit(1)
+            if not self._config.testing:
+                sys.exit(1)
 
     def _validate_ip_file(self, file_path: Optional[str]) -> None:
         '''
@@ -198,7 +232,8 @@ class UI():
                     f"{RED}[*] Warning:{CLEAR} ",
                     f"{file_path} is not a valid file!"
                 ]))
-            sys.exit(1)
+            if not self._config.testing:
+                sys.exit(1)
 
     def display(self, header: str, ip: str=None) -> None:
         '''
