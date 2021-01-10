@@ -80,3 +80,30 @@ def test_ip_already_set() -> None:
             f"ACTUAL: {ui_obj.ip} for UI(): {ui_obj}"
         ])
         assert ui_obj.ip == ip, message
+
+
+def test_ip_raw_ip() -> None:
+    '''
+    Ensures that a raw ip address from the `user` is
+    identical to the stored proptery
+    '''
+    ip_list = [
+        "0.0.0.0",
+        "1.1.1.1",
+        "8.8.8.8",
+        "127.0.0.1"
+    ]
+    for ip in ip_list:
+        conf = ui.UI_Config(
+            testing=True,
+            args=[
+            "-ip",
+            ip
+            ]
+        )
+        ui_obj = ui.UI(config=conf)
+        message = "".join([
+            f"EXPECTED: {ip} does not match ",
+            f"ACTUAL: {ui_obj.ip} for UI(): {ui_obj}"
+        ])
+        assert ui_obj.ip == ip, message
