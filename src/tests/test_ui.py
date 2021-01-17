@@ -228,7 +228,7 @@ def test_ip_validation_failure() -> None:
         )
         ui_obj = ui.UI(config=conf)
         expected = False
-        actual = ui_obj._validate_ip(ip)
+        actual = ui_obj._validate_ip(str(ip))
         message = "".join([
             f"EXPECTED: {expected} does not match ",
             f"ACTUAL: {actual} for UI(): {ui_obj}"
