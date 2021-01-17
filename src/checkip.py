@@ -112,7 +112,7 @@ class IP_Checker():
             self.ips = self.reader.read_input_file(self.ui.ip_file)
         else:
             logger.warning("No -if or -ip flag given")
-            self.ui.parser.print_help()
+            self.ui.display_help()
             sys.exit(1)
 
         # ensure report is empty

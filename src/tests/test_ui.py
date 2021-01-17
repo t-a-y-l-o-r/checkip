@@ -223,5 +223,32 @@ def test_ip_validation_failure() -> None:
 #                       File Consumption
 #   ========================================================================
 
-def test_ip_file() -> None:
-    file = TEST_IP_FILE
+def test_ip_file_set() -> None:
+    '''
+    Ensures that the correct arument value is returned when
+    the inner argument is already set
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip"
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(config=conf)
+    ui_obj._ip_file = TEST_IP_FILE
+    actual = ui_obj.ip_file
+    expected = TEST_IP_FILE
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+'''
+def test_ip_file_no_file() -> None:
+
+def test_ip_file_has_file() -> None:
+
+def test_ip_file_invalid_file() -> None:
+'''
