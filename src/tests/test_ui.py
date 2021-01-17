@@ -231,7 +231,7 @@ def test_ip_file_set() -> None:
     conf = ui.UI_Config(
         testing=True,
         args=[
-            "-ip"
+            "-ip",
             "8.8.8.8"
         ]
     )
@@ -245,9 +245,24 @@ def test_ip_file_set() -> None:
     ])
     assert expected == actual, message
 
-'''
 def test_ip_file_no_file() -> None:
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(config=conf)
+    actual = ui_obj.ip_file
+    expected = None
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
 
+'''
 def test_ip_file_has_file() -> None:
 
 def test_ip_file_invalid_file() -> None:
