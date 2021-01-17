@@ -246,6 +246,10 @@ def test_ip_file_set() -> None:
     assert expected == actual, message
 
 def test_ip_file_no_file() -> None:
+    '''
+    Ensures that the correct arument value is returned when
+    the inner argument is empty
+    '''
     conf = ui.UI_Config(
         testing=True,
         args=[
@@ -262,8 +266,28 @@ def test_ip_file_no_file() -> None:
     ])
     assert expected == actual, message
 
-'''
 def test_ip_file_has_file() -> None:
+    '''
+    Ensures that the correct arument value is returned when
+    the file is provided properly
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "--input-file",
+            TEST_IP_FILE
+        ]
+    )
+    ui_obj = ui.UI(config=conf)
 
+    actual = ui_obj.ip_file
+    expected = TEST_IP_FILE
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+'''
 def test_ip_file_invalid_file() -> None:
 '''
