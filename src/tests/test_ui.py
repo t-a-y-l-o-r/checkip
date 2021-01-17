@@ -1,3 +1,4 @@
+from pathlib import Path
 from ui import ui
 import socket
 import pytest
@@ -6,7 +7,10 @@ import pytest
 #                       Table of Contents
 #   ========================================================================
 # 1. Globals
-# 2. Object Construction
+# 2. Fixtures
+# 3. Object Construction
+# 4. IP
+# 5. File reading
 #
 #
 #
@@ -19,6 +23,7 @@ import pytest
 #   ========================================================================
 #                       Globals
 #   ========================================================================
+
 UI_EXPECTED_ARGS = {
     "ip",
     "input_file",
@@ -27,6 +32,23 @@ UI_EXPECTED_ARGS = {
     "silent",
     "verbose"
 }
+
+TEST_IP_FILE = "test_ip.txt"
+DEFAULT_DIR = "./tmp"
+
+
+#   ========================================================================
+#                       Fixtures
+#   ========================================================================
+
+@pytest.fixture(scope="session")
+def ip_file(tmpdir_factory) -> Path:
+    '''
+    Generates the temporary ip file
+    '''
+    tmp_file = tmpdir_factory.mktemp(DEFAULT_DIR).join(TEST_IP_FILE)
+    tmp_file.write("8.8.8.8")
+    return tmp_file
 
 #   ========================================================================
 #                       Object Construction
@@ -52,7 +74,7 @@ def test_argument_setup() -> None:
     assert UI_EXPECTED_ARGS == args, message
 
 #   ========================================================================
-#                       IP Parsing
+#                       IP/Host Argument
 #   ========================================================================
 
 
@@ -157,9 +179,7 @@ def test_ip_from_host_failure() -> None:
         )
         ui_obj = ui.UI(config=conf)
         with pytest.raises(ValueError):
-            print(f"host: {host}")
             ip = ui_obj.ip
-            print("error did not happen")
 
 def test_ip_validation() -> None:
     '''
@@ -208,9 +228,102 @@ def test_ip_validation_failure() -> None:
         )
         ui_obj = ui.UI(config=conf)
         expected = False
-        actual = ui_obj._validate_ip(ip)
+        actual = ui_obj._validate_ip(str(ip))
         message = "".join([
             f"EXPECTED: {expected} does not match ",
             f"ACTUAL: {actual} for UI(): {ui_obj}"
         ])
         assert expected == actual, message
+
+#   ========================================================================
+#                       File Argument
+#   ========================================================================
+
+def test_ip_file_set(ip_file) -> None:
+    '''
+    Ensures that the correct arument value is returned when
+    the inner argument is already set
+    '''
+    file_str = str(ip_file)
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(config=conf)
+    ui_obj._ip_file = file_str
+    actual = ui_obj.ip_file
+    expected = file_str
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+def test_ip_file_no_file() -> None:
+    '''
+    Ensures that the correct arument value is returned when
+    the inner argument is empty
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(config=conf)
+    actual = ui_obj.ip_file
+    expected = None
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+def test_ip_file_has_file(ip_file) -> None:
+    '''
+    Ensures that the correct arument value is returned when
+    the file is provided properly
+    '''
+    file_str = str(ip_file)
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "--input-file",
+            str(file_str)
+        ]
+    )
+    ui_obj = ui.UI(config=conf)
+
+    actual = ui_obj.ip_file
+    expected = file_str
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+def test_ip_file_invalid_file() -> None:
+    '''
+    Ensures that the correct arument value is returned when
+    the file is invalid
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "--input-file",
+            "hasldjhalsjdn"
+        ]
+    )
+    ui_obj = ui.UI(config=conf)
+
+    actual = ui_obj.ip_file
+    expected = None
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message

@@ -1,5 +1,6 @@
-from io import StringIO
 from typing import Dict, Any, Optional, List
+from io import StringIO
+from enum import Enum
 import argparse
 import logging
 import socket
@@ -41,6 +42,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger("ipchecker-ui")
 
+
+#   ========================================================================
+#                       Args - Enum
+#   ========================================================================
+
+class UI_Args(Enum):
+    IP = "ip"
+    IP_FILE = "input_file"
+    HOST = "host"
+    FORCE = "force"
+    SILENT = "silent"
+    VERBOSE = "verbose"
+
+
 #   ========================================================================
 #                       UI_Config - Class
 #   ========================================================================
@@ -65,7 +80,7 @@ class UI_Config():
 class UI():
     def __init__(self, config=UI_Config()) -> None:
         self._config = config
-        self._ip: Optional[Any] = None
+        self._ip: Optional[str] = None
         self._ip_file: Optional[str] = None
         self._all_ips: Optional[bool] = None
         self.silent = False
@@ -162,25 +177,37 @@ class UI():
         '''
         if self._ip:
             return self._ip
-        else:
-            keys = self.args.keys()
-            has_raw_ip = "ip" in keys and self.args["ip"]
-            has_host = "host" in keys and self.args["host"]
 
-            if has_raw_ip:
-                self._ip = self.args["ip"]
-            elif has_host:
-                try:
-                    self._ip = socket.gethostbyname(self.args["host"])
-                except socket.gaierror as e:
-                    logger.warning(e)
-                    raise ValueError(
-                        f"[*] Unable to resolve host name: {self.args['host']}"
-                    )
-            passed = self._validate_ip(self._ip)
-            if not passed: # exit on bad ip
-                self._bad_ip_exit(self._ip)
+        ip_flag = UI_Args.IP.value
+        host_flag = UI_Args.HOST.value
+
+        has_raw_ip = self.args[ip_flag]
+        has_host = self.args[host_flag]
+        tmp_ip = ""
+
+        if has_raw_ip:
+            tmp_ip = str(self.args[ip_flag])
+        elif has_host:
+            try:
+                tmp_ip = str(socket.gethostbyname(self.args[host_flag]))
+            except socket.gaierror as e:
+                logger.warning(e)
+                raise ValueError(
+                    f"[*] Unable to resolve host name: {self.args[host_flag]}"
+                )
+        else: # nothing detected, return None
+            self._ip = None
             return self._ip
+
+        passed = self._validate_ip(tmp_ip)
+        if passed:
+            self._ip = tmp_ip
+        else:
+            # exit on bad ip
+            self._ip = None
+            self._bad_ip_exit(tmp_ip)
+
+        return self._ip
 
     def _bad_ip_exit(self, ip) -> None:
         if not self.silent:
@@ -194,15 +221,36 @@ class UI():
 
     @property
     def ip_file(self) -> Optional[str]:
+        '''
+        Provides access to the file name for the list of ips
+        '''
         if self._ip_file:
             return self._ip_file
         else:
             keys = self.args.keys()
-            has_file = "input_file" in keys and self.args["input_file"]
+            file_flag = UI_Args.IP_FILE.value
+            has_file = file_flag in keys and self.args[file_flag]
             if has_file:
-                self._ip_file = self.args["input_file"]
-                self._validate_ip_file(self._ip_file)
+                ip_file = self.args[file_flag]
+                is_valid = self._valid_ip_file(ip_file)
+                if not is_valid: # bad file
+                    self._ip_file = None
+                    self._bad_file_exit(ip_file)
+                else:
+                    self._ip_file = ip_file
+            else: # no file provided
+                self._ip_file = None
             return self._ip_file
+
+    def _bad_file_exit(self, ip_file) -> None:
+        if not self.silent:
+            logger.debug(f"Invalid file: {ip_file}")
+            print("".join([
+                f"{RED}[*] Warning:{CLEAR} ",
+                f"{ip_file} is an invalid file"
+            ]))
+        if not self._config.testing:
+            sys.exit(1)
 
     @property
     def all_ips(self) -> bool:
@@ -221,13 +269,13 @@ class UI():
         '''
         if not ip:
             return False
-        elif not re.compile("(\\d+\\.){3}(\\d+)").match(str(ip)):
+        elif not re.compile("(\\d+\\.){3}(\\d+)").match(ip):
             return False
         else:
             return True
 
 
-    def _validate_ip_file(self, file_path: Optional[str]) -> None:
+    def _valid_ip_file(self, file_path: Optional[str]) -> bool:
         '''
         Attempts to validat the given file path
         '''
@@ -244,8 +292,8 @@ class UI():
                     f"{RED}[*] Warning:{CLEAR} ",
                     f"{file_path} is not a valid file!"
                 ]))
-            if not self._config.testing:
-                sys.exit(1)
+            return False
+        return True
 
     def display(self, header: str, ip: str=None) -> None:
         '''
@@ -275,3 +323,9 @@ class UI():
             f"the following ips will NOT be scanned: {ips_str}"
         ])
         print(output)
+
+    def display_help(self) -> None:
+        '''
+        Displays the usage message for the cli
+        '''
+        self._parser.print_help()
