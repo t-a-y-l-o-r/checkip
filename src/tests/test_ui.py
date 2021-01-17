@@ -7,6 +7,8 @@ import pytest
 #   ========================================================================
 # 1. Globals
 # 2. Object Construction
+# 3. IP
+# 2. File reading
 #
 #
 #
@@ -27,6 +29,8 @@ UI_EXPECTED_ARGS = {
     "silent",
     "verbose"
 }
+
+TEST_IP_FILE = "test_ip.txt"
 
 #   ========================================================================
 #                       Object Construction
@@ -214,3 +218,10 @@ def test_ip_validation_failure() -> None:
             f"ACTUAL: {actual} for UI(): {ui_obj}"
         ])
         assert expected == actual, message
+
+#   ========================================================================
+#                       File Consumption
+#   ========================================================================
+
+def test_ip_file() -> None:
+    file = TEST_IP_FILE
