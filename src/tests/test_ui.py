@@ -1,3 +1,4 @@
+from pathlib import Path
 from ui import ui
 import socket
 import pytest
@@ -40,12 +41,12 @@ DEFAULT_DIR = "./tmp"
 #                       Fixtures
 #   ========================================================================
 
-@pytest.fixture
-def ip_file(tmp_path):
+@pytest.fixture(scope="session")
+def ip_file(tmpdir_factory) -> Path:
     '''
     Generates the temporary ip file
     '''
-    tmp_file = tmpdir.mkdir(DEFAULT_DIR).join(TEST_IP_FILE)
+    tmp_file = tmpdir_factory.mktemp(DEFAULT_DIR).join(TEST_IP_FILE)
     tmp_file.write("8.8.8.8")
     return tmp_file
 
@@ -178,9 +179,7 @@ def test_ip_from_host_failure() -> None:
         )
         ui_obj = ui.UI(config=conf)
         with pytest.raises(ValueError):
-            print(f"host: {host}")
             ip = ui_obj.ip
-            print("error did not happen")
 
 def test_ip_validation() -> None:
     '''
@@ -245,6 +244,7 @@ def test_ip_file_set(ip_file) -> None:
     Ensures that the correct arument value is returned when
     the inner argument is already set
     '''
+    file_str = str(ip_file)
     conf = ui.UI_Config(
         testing=True,
         args=[
@@ -253,9 +253,9 @@ def test_ip_file_set(ip_file) -> None:
         ]
     )
     ui_obj = ui.UI(config=conf)
-    ui_obj._ip_file = ip_file
+    ui_obj._ip_file = file_str
     actual = ui_obj.ip_file
-    expected = ip_file
+    expected = file_str
     message = "".join([
         f"EXPECTED: {expected} does not match ",
         f"ACTUAL: {actual} for UI(): {ui_obj}"
@@ -288,17 +288,18 @@ def test_ip_file_has_file(ip_file) -> None:
     Ensures that the correct arument value is returned when
     the file is provided properly
     '''
+    file_str = str(ip_file)
     conf = ui.UI_Config(
         testing=True,
         args=[
             "--input-file",
-            ip_file
+            str(file_str)
         ]
     )
     ui_obj = ui.UI(config=conf)
 
     actual = ui_obj.ip_file
-    expected = ip_file
+    expected = file_str
     message = "".join([
         f"EXPECTED: {expected} does not match ",
         f"ACTUAL: {actual} for UI(): {ui_obj}"
