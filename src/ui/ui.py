@@ -199,6 +199,7 @@ class UI():
                 return self._ip
             passed = self._validate_ip(self._ip)
             if not passed: # exit on bad ip
+                self._ip = None
                 self._bad_ip_exit(self._ip)
             return self._ip
 
@@ -224,11 +225,26 @@ class UI():
             file_flag = UI_Args.IP_FILE.value
             has_file = file_flag in keys and self.args[file_flag]
             if has_file:
-                self._ip_file = self.args[file_flag]
-                self._validate_ip_file(self._ip_file)
+                ip_file = self.args[file_flag]
+                is_valid = self._valid_ip_file(ip_file)
+                if not is_valid: # bad file
+                    self._ip_file = None
+                    self._bad_file_exit(ip_file)
+                else:
+                    self._ip_file = ip_file
             else: # no file provided
                 self._ip_file = None
             return self._ip_file
+
+    def _bad_file_exit(self, ip_file) -> None:
+        if not self.silent:
+            logger.debug(f"Invalid file: {ip_file}")
+            print("".join([
+                f"{RED}[*] Warning:{CLEAR} ",
+                f"{ip_file} is an invalid file"
+            ]))
+        if not self._config.testing:
+            sys.exit(1)
 
     @property
     def all_ips(self) -> bool:
@@ -253,7 +269,7 @@ class UI():
             return True
 
 
-    def _validate_ip_file(self, file_path: Optional[str]) -> None:
+    def _valid_ip_file(self, file_path: Optional[str]) -> None:
         '''
         Attempts to validat the given file path
         '''
@@ -270,8 +286,8 @@ class UI():
                     f"{RED}[*] Warning:{CLEAR} ",
                     f"{file_path} is not a valid file!"
                 ]))
-            if not self._config.testing:
-                sys.exit(1)
+            return False
+        return True
 
     def display(self, header: str, ip: str=None) -> None:
         '''

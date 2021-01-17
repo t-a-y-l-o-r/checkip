@@ -271,23 +271,51 @@ def test_ip_file_has_file() -> None:
     Ensures that the correct arument value is returned when
     the file is provided properly
     '''
+    tmp_file = test_tmp_ip_file()
     conf = ui.UI_Config(
         testing=True,
         args=[
             "--input-file",
-            TEST_IP_FILE
+            tmp_file
         ]
     )
     ui_obj = ui.UI(config=conf)
 
     actual = ui_obj.ip_file
-    expected = TEST_IP_FILE
+    expected = tmp_file
     message = "".join([
         f"EXPECTED: {expected} does not match ",
         f"ACTUAL: {actual} for UI(): {ui_obj}"
     ])
     assert expected == actual, message
 
-'''
 def test_ip_file_invalid_file() -> None:
-'''
+    '''
+    Ensures that the correct arument value is returned when
+    the file is invalid
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "--input-file",
+            "hasldjhalsjdn"
+        ]
+    )
+    ui_obj = ui.UI(config=conf)
+
+    actual = ui_obj.ip_file
+    expected = None
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+
+def test_tmp_ip_file(tmp_path):
+    '''
+    Generates the temporary ip file
+    '''
+    tmp_file = tmp_path/TEST_IP_FILE
+    tmp_file.write_text("8.8.8.8")
+    return tmp_file
