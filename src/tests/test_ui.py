@@ -6,9 +6,10 @@ import pytest
 #                       Table of Contents
 #   ========================================================================
 # 1. Globals
-# 2. Object Construction
-# 3. IP
-# 2. File reading
+# 2. Fixtures
+# 3. Object Construction
+# 4. IP
+# 5. File reading
 #
 #
 #
@@ -21,6 +22,7 @@ import pytest
 #   ========================================================================
 #                       Globals
 #   ========================================================================
+
 UI_EXPECTED_ARGS = {
     "ip",
     "input_file",
@@ -31,6 +33,21 @@ UI_EXPECTED_ARGS = {
 }
 
 TEST_IP_FILE = "test_ip.txt"
+DEFAULT_DIR = "./tmp"
+
+
+#   ========================================================================
+#                       Fixtures
+#   ========================================================================
+
+@pytest.fixture
+def ip_file(tmp_path):
+    '''
+    Generates the temporary ip file
+    '''
+    tmp_file = tmpdir.mkdir(DEFAULT_DIR).join(TEST_IP_FILE)
+    tmp_file.write("8.8.8.8")
+    return tmp_file
 
 #   ========================================================================
 #                       Object Construction
@@ -56,7 +73,7 @@ def test_argument_setup() -> None:
     assert UI_EXPECTED_ARGS == args, message
 
 #   ========================================================================
-#                       IP Parsing
+#                       IP/Host Argument
 #   ========================================================================
 
 
@@ -220,10 +237,10 @@ def test_ip_validation_failure() -> None:
         assert expected == actual, message
 
 #   ========================================================================
-#                       File Consumption
+#                       File Argument
 #   ========================================================================
 
-def test_ip_file_set() -> None:
+def test_ip_file_set(ip_file) -> None:
     '''
     Ensures that the correct arument value is returned when
     the inner argument is already set
@@ -236,9 +253,9 @@ def test_ip_file_set() -> None:
         ]
     )
     ui_obj = ui.UI(config=conf)
-    ui_obj._ip_file = TEST_IP_FILE
+    ui_obj._ip_file = ip_file
     actual = ui_obj.ip_file
-    expected = TEST_IP_FILE
+    expected = ip_file
     message = "".join([
         f"EXPECTED: {expected} does not match ",
         f"ACTUAL: {actual} for UI(): {ui_obj}"
@@ -266,23 +283,22 @@ def test_ip_file_no_file() -> None:
     ])
     assert expected == actual, message
 
-def test_ip_file_has_file() -> None:
+def test_ip_file_has_file(ip_file) -> None:
     '''
     Ensures that the correct arument value is returned when
     the file is provided properly
     '''
-    tmp_file = test_tmp_ip_file()
     conf = ui.UI_Config(
         testing=True,
         args=[
             "--input-file",
-            tmp_file
+            ip_file
         ]
     )
     ui_obj = ui.UI(config=conf)
 
     actual = ui_obj.ip_file
-    expected = tmp_file
+    expected = ip_file
     message = "".join([
         f"EXPECTED: {expected} does not match ",
         f"ACTUAL: {actual} for UI(): {ui_obj}"
@@ -310,12 +326,3 @@ def test_ip_file_invalid_file() -> None:
         f"ACTUAL: {actual} for UI(): {ui_obj}"
     ])
     assert expected == actual, message
-
-
-def test_tmp_ip_file(tmp_path):
-    '''
-    Generates the temporary ip file
-    '''
-    tmp_file = tmp_path/TEST_IP_FILE
-    tmp_file.write_text("8.8.8.8")
-    return tmp_file
