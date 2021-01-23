@@ -391,9 +391,9 @@ def test_force_manual() -> None:
         ]
     )
     ui_obj = ui.UI(conf)
-    us_obj._force = True
+    ui_obj._force = True
 
-    actual = us_obj.force
+    actual = ui_obj.force
     expected = True
 
     message = "".join([
@@ -402,9 +402,9 @@ def test_force_manual() -> None:
     ])
     assert expected == actual, message
 
-    us_obj._force = False
+    ui_obj._force = False
 
-    actual = us_obj.force
+    actual = ui_obj.force
     expected = False
 
     message = "".join([
@@ -423,13 +423,13 @@ def test_force_args() -> None:
         testing=True,
         args=[
             "-ip",
-            "8.8.8.8"
+            "8.8.8.8",
             "--force"
         ]
     )
     ui_obj = ui.UI(conf)
 
-    actual = us_obj.force
+    actual = ui_obj.force
     expected = True
 
     message = "".join([
@@ -447,7 +447,7 @@ def test_force_args() -> None:
     )
     ui_obj = ui.UI(conf)
 
-    actual = us_obj.force
+    actual = ui_obj.force
     expected = False
 
     message = "".join([

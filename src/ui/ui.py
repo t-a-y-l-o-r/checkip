@@ -264,8 +264,9 @@ class UI():
         if self._force is not None:
             return self._force
         else:
-            keys = self.args.keys()
-            self._force = "force" in keys
+            value = UI_Args.FORCE.value
+            print(self.args)
+            self._force = self.args[value]
             return self._force
 
     def _validate_ip(self, ip: Optional[str]) -> bool:
