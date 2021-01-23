@@ -1,6 +1,6 @@
 from typing import Dict, Any, Optional, List
+from enum import Enum, unique
 from io import StringIO
-from enum import Enum
 import argparse
 import logging
 import socket
@@ -47,7 +47,11 @@ logger = logging.getLogger("ipchecker-ui")
 #                       Args - Enum
 #   ========================================================================
 
+@unique
 class UI_Args(Enum):
+    '''
+    These arguments are guranteed to exist within the ui.args
+    '''
     IP = "ip"
     IP_FILE = "input_file"
     HOST = "host"
@@ -82,7 +86,7 @@ class UI():
         self._config = config
         self._ip: Optional[str] = None
         self._ip_file: Optional[str] = None
-        self._all_ips: Optional[bool] = None
+        self._force: Optional[bool] = None
         self.silent = False
 
         self._parser = argparse.ArgumentParser(
@@ -253,13 +257,16 @@ class UI():
             sys.exit(1)
 
     @property
-    def all_ips(self) -> bool:
-        if self._all_ips is not None:
-            return self._all_ips
+    def force(self) -> bool:
+        '''
+        Provides whether or not all ips are being forced
+        '''
+        if self._force is not None:
+            return self._force
         else:
-            keys = self.args.keys()
-            self._all_ips = "force" in keys
-            return self._all_ips
+            value = UI_Args.FORCE.value
+            self._force = self.args[value]
+            return self._force
 
     def _validate_ip(self, ip: Optional[str]) -> bool:
         '''

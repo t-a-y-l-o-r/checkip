@@ -124,7 +124,7 @@ class IP_Checker():
 
         # check if forcing all ips or not
         actual_ips = None
-        if self.ui.all_ips:
+        if self.ui.force:
             actual_ips = self.filter_record_ips(
                 self.ips,
                 record_ips,

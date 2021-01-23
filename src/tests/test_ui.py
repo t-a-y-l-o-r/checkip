@@ -1,3 +1,4 @@
+from typing import Dict, Any
 from pathlib import Path
 from ui import ui
 import socket
@@ -11,7 +12,9 @@ import pytest
 # 3. Object Construction
 # 4. IP
 # 5. File reading
-#
+# 6. UI ARGS
+# 7. Force
+# 8. Validate IP
 #
 #
 #   ========================================================================
@@ -327,3 +330,220 @@ def test_ip_file_invalid_file() -> None:
         f"ACTUAL: {actual} for UI(): {ui_obj}"
     ])
     assert expected == actual, message
+
+#   ========================================================================
+#                       UI ARGS
+#   ========================================================================
+
+def test_ui_args_unique() -> None:
+    '''
+    Ensures that all values for UI_Args is unique
+    '''
+    count_of_args: Dict[Any, int] = {}
+    for arg in ui.UI_Args:
+        message = "".join([
+            f"WARNING: {arg} was found in UI_Args more than once"
+        ])
+        assert arg not in count_of_args, message
+        count_of_args.setdefault(arg, 1)
+
+def test_ui_args_match_ui_args() -> None:
+    '''
+    Ensures that the UI_Args always exist within UI.args
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    enum_args: Dict[Any, int] = {}
+    for arg in ui.UI_Args:
+        value = arg.value
+        enum_args[value] = enum_args.setdefault(value, 0) + 1
+
+    obj_args: Dict[Any, int] = {}
+    for arg in ui_obj.args:
+        obj_args[arg] = obj_args.setdefault(arg, 0) + 1
+
+    message = "".join([
+        f"EXPECTED: {enum_args} does not match ",
+        f"ACTUAL: {obj_args} for UI(): {ui_obj}"
+    ])
+    assert enum_args == obj_args, message
+
+#   ========================================================================
+#                       Force
+#   ========================================================================
+
+def test_force_manual() -> None:
+    '''
+    Ensures that all branches of the ui.force
+    execute as expeted.
+    Providing any existing value if there is one
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    ui_obj._force = True
+
+    actual = ui_obj.force
+    expected = True
+
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+    ui_obj._force = False
+
+    actual = ui_obj.force
+    expected = False
+
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+def test_force_args() -> None:
+    '''
+    Ensures that all branches of the ui.force
+    execute as expeted.
+    Given the value is NOT already in memory and must be calculated
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8",
+            "--force"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    actual = ui_obj.force
+    expected = True
+
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    actual = ui_obj.force
+    expected = False
+
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+#   ========================================================================
+#                       Validate IP
+#   ========================================================================
+
+def test_validate_ip_empty() -> None:
+    '''
+    Ensures that the ui._validate_ip()
+    call returns `False` when a falsey value is provided
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8",
+            "--force"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    falsey_values = [
+        "",
+        None
+    ]
+    expected = False
+    for value in falsey_values:
+        actual = ui_obj._validate_ip(value)
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
+
+def test_validate_ip_no_match() -> None:
+    '''
+    Ensures that the ui._validate_ip()
+    call returns `False` when a a bad pattern is provided
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8",
+            "--force"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    bad_values = [
+        "8.0",
+        "abc",
+        "-1,000"
+    ]
+    expected = False
+    for value in bad_values:
+        actual = ui_obj._validate_ip(value)
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
+
+def test_validate_ip_passes() -> None:
+    '''
+    Ensures that the ui._validate_ip()
+    call returns `True` when a a good pattern is provided
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8",
+            "--force"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    bad_values = [
+        "8.8.8.8",
+        "127.0.0.1",
+        "192.168.0.1"
+    ]
+    expected = True
+    for value in bad_values:
+        actual = ui_obj._validate_ip(value)
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
