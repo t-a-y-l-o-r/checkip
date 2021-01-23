@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Dict, Any
 from ui import ui
 import socket
 import pytest
@@ -327,3 +328,19 @@ def test_ip_file_invalid_file() -> None:
         f"ACTUAL: {actual} for UI(): {ui_obj}"
     ])
     assert expected == actual, message
+
+#   ========================================================================
+#                       UI ARGS
+#   ========================================================================
+
+def test_ui_args_unique() -> None:
+    '''
+    Ensures that all values for UI_Args is unique
+    '''
+    count_of_args: Dict[Any, int] = {}
+    for arg in ui.UI_Args:
+        message = "".join([
+            f"WARNING: {arg} was found in UI_Args more than once"
+        ])
+        assert arg not in count_of_args, message
+        count_of_args.setdefault(arg, 1)

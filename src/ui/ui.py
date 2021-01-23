@@ -1,6 +1,6 @@
 from typing import Dict, Any, Optional, List
+from enum import Enum, unique
 from io import StringIO
-from enum import Enum
 import argparse
 import logging
 import socket
@@ -47,7 +47,11 @@ logger = logging.getLogger("ipchecker-ui")
 #                       Args - Enum
 #   ========================================================================
 
+@unique
 class UI_Args(Enum):
+    '''
+    These arguments are guranteed to exist within the ui.args
+    '''
     IP = "ip"
     IP_FILE = "input_file"
     HOST = "host"
