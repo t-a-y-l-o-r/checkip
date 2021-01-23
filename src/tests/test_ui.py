@@ -372,3 +372,86 @@ def test_ui_args_match_ui_args() -> None:
         f"ACTUAL: {obj_args} for UI(): {ui_obj}"
     ])
     assert enum_args == obj_args, message
+
+#   ========================================================================
+#                       Force
+#   ========================================================================
+
+def test_force_manual() -> None:
+    '''
+    Ensures that all branches of the ui.force
+    execute as expeted.
+    Providing any existing value if there is one
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    us_obj._force = True
+
+    actual = us_obj.force
+    expected = True
+
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+    us_obj._force = False
+
+    actual = us_obj.force
+    expected = False
+
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+def test_force_args() -> None:
+    '''
+    Ensures that all branches of the ui.force
+    execute as expeted.
+    Providing any existing value if there is one
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+            "--force"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    actual = us_obj.force
+    expected = True
+
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    actual = us_obj.force
+    expected = False
+
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message

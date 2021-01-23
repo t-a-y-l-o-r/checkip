@@ -86,7 +86,7 @@ class UI():
         self._config = config
         self._ip: Optional[str] = None
         self._ip_file: Optional[str] = None
-        self._all_ips: Optional[bool] = None
+        self._force: Optional[bool] = None
         self.silent = False
 
         self._parser = argparse.ArgumentParser(
@@ -257,13 +257,16 @@ class UI():
             sys.exit(1)
 
     @property
-    def all_ips(self) -> bool:
-        if self._all_ips is not None:
-            return self._all_ips
+    def force(self) -> bool:
+        '''
+        Provides whether or not all ips are being forced
+        '''
+        if self._force is not None:
+            return self._force
         else:
             keys = self.args.keys()
-            self._all_ips = "force" in keys
-            return self._all_ips
+            self._force = "force" in keys
+            return self._force
 
     def _validate_ip(self, ip: Optional[str]) -> bool:
         '''
