@@ -347,7 +347,7 @@ def test_ui_args_unique() -> None:
 
 def test_ui_args_match_ui_args() -> None:
     '''
-    Ensures that the UI_Args always exist within UI.args()
+    Ensures that the UI_Args always exist within UI.args
     '''
     conf = ui.UI_Config(
         testing=True,
@@ -358,13 +358,14 @@ def test_ui_args_match_ui_args() -> None:
     )
     ui_obj = ui.UI(conf)
 
-    enum_args = {}
+    enum_args: Dict[Any, int] = {}
     for arg in ui.UI_Args:
-        enum_args[arg] = enum_args.setdefault(arg, 0) + 1
+        value = arg.value
+        enum_args[value] = enum_args.setdefault(value, 0) + 1
 
-    obj_args = {}
-    for arg in ui_obj.args():
-        obj_args[args] = obj_args.setdefault(arg, 0) + 1
+    obj_args: Dict[Any, int] = {}
+    for arg in ui_obj.args:
+        obj_args[arg] = obj_args.setdefault(arg, 0) + 1
 
     message = "".join([
         f"EXPECTED: {enum_args} does not match ",
