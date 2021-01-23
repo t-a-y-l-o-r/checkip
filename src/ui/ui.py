@@ -265,7 +265,6 @@ class UI():
             return self._force
         else:
             value = UI_Args.FORCE.value
-            print(self.args)
             self._force = self.args[value]
             return self._force
 
