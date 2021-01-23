@@ -1,5 +1,5 @@
-from pathlib import Path
 from typing import Dict, Any
+from pathlib import Path
 from ui import ui
 import socket
 import pytest
@@ -344,3 +344,30 @@ def test_ui_args_unique() -> None:
         ])
         assert arg not in count_of_args, message
         count_of_args.setdefault(arg, 1)
+
+def test_ui_args_match_ui_args() -> None:
+    '''
+    Ensures that the UI_Args always exist within UI.args()
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    enum_args = {}
+    for arg in ui.UI_Args:
+        enum_args[arg] = enum_args.setdefault(arg, 0) + 1
+
+    obj_args = {}
+    for arg in ui_obj.args():
+        obj_args[args] = obj_args.setdefault(arg, 0) + 1
+
+    message = "".join([
+        f"EXPECTED: {enum_args} does not match ",
+        f"ACTUAL: {obj_args} for UI(): {ui_obj}"
+    ])
+    assert enum_args == obj_args, message
