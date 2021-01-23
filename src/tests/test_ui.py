@@ -417,7 +417,7 @@ def test_force_args() -> None:
     '''
     Ensures that all branches of the ui.force
     execute as expeted.
-    Providing any existing value if there is one
+    Given the value is NOT already in memory and must be calculated
     '''
     conf = ui.UI_Config(
         testing=True,
@@ -455,3 +455,64 @@ def test_force_args() -> None:
         f"ACTUAL: {actual} for UI(): {ui_obj}"
     ])
     assert expected == actual, message
+
+#   ========================================================================
+#                       Validate IP
+#   ========================================================================
+
+def test_validate_ip_empty() -> None:
+    '''
+    Ensures that the ui._validate_ip()
+    call returns `False` when a falsey value is provided
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8",
+            "--force"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    falsey_values = [
+        "",
+        None
+    ]
+    expected = False
+    for value in falsey_values:
+        actual = ui_obj._validate_ip(value)
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
+
+def test_validate_ip_no_match() -> None:
+    '''
+    Ensures that the ui._validate_ip()
+    call returns `False` when a a bad pattern is provided
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8",
+            "--force"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    bad_values = [
+        "8.0",
+        "abc",
+        "-1,000"
+    ]
+    expected = False
+    for value in bad_values:
+        actual = ui_obj._validate_ip(value)
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
