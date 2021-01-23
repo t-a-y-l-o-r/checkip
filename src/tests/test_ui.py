@@ -516,3 +516,32 @@ def test_validate_ip_no_match() -> None:
             f"ACTUAL: {actual} for UI(): {ui_obj}"
         ])
         assert expected == actual, message
+
+def test_validate_ip_passes() -> None:
+    '''
+    Ensures that the ui._validate_ip()
+    call returns `True` when a a good pattern is provided
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8",
+            "--force"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+
+    bad_values = [
+        "8.8.8.8",
+        "127.0.0.1",
+        "192.168.0.1"
+    ]
+    expected = True
+    for value in bad_values:
+        actual = ui_obj._validate_ip(value)
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
