@@ -16,7 +16,10 @@ import sys
 # 6. UI ARGS
 # 7. Force
 # 8. Validate IP
-#
+# 9. Args
+# 10. Bad IP Exit
+# 11. Silent
+# 12. Bad File Exit
 #
 #   ========================================================================
 #                       Description
@@ -691,7 +694,7 @@ def test_args_from_user_input() -> None:
 #                       Bad IP Exit
 #   ========================================================================
 
-def test_bad_ip_exit_silent(capsys) -> None:
+def test_bad_ip_exit_not_silent(capsys) -> None:
     '''
     Ensures appropriate input when silent is not passed
     '''
@@ -711,13 +714,58 @@ def test_bad_ip_exit_silent(capsys) -> None:
 
     expected = "".join([
         f"{ui.RED}[*] Warning:{ui.CLEAR} ",
-        f"{ip} is an invalid ipv4 address"
+        f"{ip} is an invalid ipv4 address\n"
     ])
     message = "".join([
         f"EXPECTED: {expected} does not match ",
         f"ACTUAL: {actual} for UI(): {ui_obj}"
     ])
+
     assert expected == actual, message
+
+def test_bad_ip_exit_silent(capsys) -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            ip
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    ui_obj._silent = True
+
+    ui_obj._bad_ip_exit(ip)
+    actual = capsys.readouterr().out
+
+    expected = ""
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+def test_bad_ip_exit_not_silent_not_testing() -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=False,
+        args=[
+            "-ip",
+            ip
+        ]
+    )
+    with pytest.raises(SystemExit):
+        ui_obj = ui.UI(conf)
+        ui_obj._silent = False
+
+        ui_obj._bad_ip_exit(ip)
 
 #   ========================================================================
 #                       Silent
@@ -760,3 +808,120 @@ def test_silent_set() -> None:
             f"ACTUAL: {actual} for UI(): {ui_obj}"
         ])
         assert expected == actual, message
+
+def test_silent_not_set() -> None:
+    '''
+    Ensures that an already set `silent`
+    value is properly provided
+    '''
+    silent_sets = [
+        {
+            "bool": True,
+            "expected": True
+        },
+        {
+            "bool": False,
+            "expected": False
+
+        }
+    ]
+
+    for pairs in silent_sets:
+        silent = pairs["bool"]
+        arg_list = [
+            "-ip",
+            "8.8.8.8"
+        ]
+        if silent:
+            arg_list.append("--silent")
+        conf = ui.UI_Config(
+            testing=True,
+            args=arg_list
+        )
+        ui_obj = ui.UI(conf)
+        expected = pairs["expected"]
+
+        actual = ui_obj.silent
+
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
+
+#   ========================================================================
+#                       Bad File Exit
+#   ========================================================================
+
+def test_bad_file_exit_not_silent(capsys) -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "--input-file",
+            ip
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    ui_obj._silent = False
+
+    ui_obj._bad_file_exit(ip)
+    actual = capsys.readouterr().out
+
+    expected = "".join([
+        f"{ui.RED}[*] Warning:{ui.CLEAR} ",
+        f"{ip} is an invalid file\n"
+    ])
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+def test_bad_file_exit_silent(capsys) -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "--input-file",
+            ip
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    ui_obj._silent = True
+
+    ui_obj._bad_file_exit(ip)
+    actual = capsys.readouterr().out
+
+    expected = ""
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+def test_bad_file_exit_not_silent_not_testing() -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=False,
+        args=[
+            "--input-file",
+            ip
+        ]
+    )
+    with pytest.raises(SystemExit):
+        ui_obj = ui.UI(conf)
+        ui_obj._silent = False
+
+        ui_obj._bad_file_exit(ip)
