@@ -184,59 +184,6 @@ def test_ip_from_host_failure() -> None:
         with pytest.raises(ValueError):
             ip = ui_obj.ip
 
-def test_ip_validation() -> None:
-    '''
-    Ensures ip validation works for valid ip addresses
-    '''
-    ip_list = [
-        "0.0.0.0",
-        "1.1.1.1",
-        "8.8.8.8",
-        "127.0.0.1"
-    ]
-    for ip in ip_list:
-        conf = ui.UI_Config(
-            testing=True,
-            args=[
-            "-ip",
-            ip
-            ]
-        )
-        ui_obj = ui.UI(config=conf)
-        expected = True
-        actual = ui_obj._validate_ip(ip)
-        message = "".join([
-            f"EXPECTED: {expected} does not match ",
-            f"ACTUAL: {actual} for UI(): {ui_obj}"
-        ])
-        assert expected == actual, message
-
-def test_ip_validation_failure() -> None:
-    '''
-    Ensures ip validation fails for invalid ip addresses
-    '''
-    ip_list = [
-        "aavs.0.0.0",
-        "lashdlasd",
-        None,
-        123
-    ]
-    for ip in ip_list:
-        conf = ui.UI_Config(
-            testing=True,
-            args=[
-            "-ip",
-            ip
-            ]
-        )
-        ui_obj = ui.UI(config=conf)
-        expected = False
-        actual = ui_obj._validate_ip(str(ip))
-        message = "".join([
-            f"EXPECTED: {expected} does not match ",
-            f"ACTUAL: {actual} for UI(): {ui_obj}"
-        ])
-        assert expected == actual, message
 
 #   ========================================================================
 #                       File Argument
