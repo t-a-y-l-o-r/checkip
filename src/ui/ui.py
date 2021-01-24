@@ -87,7 +87,7 @@ class UI():
         self._ip: Optional[str] = None
         self._ip_file: Optional[str] = None
         self._force: Optional[bool] = None
-        self.silent = False
+        self._silent: Optional[bool] = None
 
         self._parser = argparse.ArgumentParser(
             description="Checks the given ip(s) for security concerns"
@@ -185,21 +185,25 @@ class UI():
         ip_flag = UI_Args.IP.value
         host_flag = UI_Args.HOST.value
 
-        has_raw_ip = self.args[ip_flag]
-        has_host = self.args[host_flag]
+        raw_ip = self.args[ip_flag]
+        host = self.args[host_flag]
         tmp_ip = ""
 
-        if has_raw_ip:
-            tmp_ip = str(self.args[ip_flag])
-        elif has_host:
+        if raw_ip:
+            tmp_ip = str(raw_ip)
+        elif host:
             try:
-                tmp_ip = str(socket.gethostbyname(self.args[host_flag]))
+                tmp_ip = str(socket.gethostbyname(host))
             except socket.gaierror as e:
                 logger.warning(e)
                 raise ValueError(
-                    f"[*] Unable to resolve host name: {self.args[host_flag]}"
+                    f"[*] Unable to resolve host name: {host}"
                 )
-        else: # nothing detected, return None
+        else:
+            # nothing detected, return None
+            # in practice this should never happen
+            # as the arg parser requires -ip/-u to be passed
+            # mostly used for testing
             self._ip = None
             return self._ip
 
@@ -267,6 +271,18 @@ class UI():
             value = UI_Args.FORCE.value
             self._force = self.args[value]
             return self._force
+
+    @property
+    def silent(self) -> bool:
+        '''
+        Provides whether or not output is silenced
+        '''
+        if self._silent is not None:
+            return self._silent
+        else:
+            value = UI_Args.SILENT.value
+            self._silent = self.args[value]
+            return self._silent
 
     def _validate_ip(self, ip: Optional[str]) -> bool:
         '''

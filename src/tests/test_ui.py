@@ -3,6 +3,7 @@ from pathlib import Path
 from ui import ui
 import socket
 import pytest
+import sys
 
 #   ========================================================================
 #                       Table of Contents
@@ -15,7 +16,10 @@ import pytest
 # 6. UI ARGS
 # 7. Force
 # 8. Validate IP
-#
+# 9. Args
+# 10. Bad IP Exit
+# 11. Silent
+# 12. Bad File Exit
 #
 #   ========================================================================
 #                       Description
@@ -184,59 +188,61 @@ def test_ip_from_host_failure() -> None:
         with pytest.raises(ValueError):
             ip = ui_obj.ip
 
-def test_ip_validation() -> None:
+def test_ip_no_ip_no_host() -> None:
     '''
-    Ensures ip validation works for valid ip addresses
+    Ensures that `None` is returned when there is no
+    appropriate ip / host found
     '''
-    ip_list = [
-        "0.0.0.0",
-        "1.1.1.1",
-        "8.8.8.8",
-        "127.0.0.1"
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    expected = None
+    ui_obj = ui.UI(config=conf)
+    ip_flag = ui.UI_Args.IP.value
+    host_flag = ui.UI_Args.HOST.value
+
+    # trick arg parser into validating the argument input
+    # bit of a hack
+    ui_obj.args
+    ui_obj.args[ip_flag] = None
+    ui_obj.args[host_flag] = None
+
+    actual = ui_obj.ip
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+def test_ip_bad_ip() -> None:
+    bad_ip_patterns = [
+        "google.com",
+        "hello_world",
+        "idk what lese",
+        "-1"
     ]
-    for ip in ip_list:
+    for pattern in bad_ip_patterns:
         conf = ui.UI_Config(
             testing=True,
             args=[
-            "-ip",
-            ip
+                "-ip",
+                pattern
             ]
         )
+        expected = None
         ui_obj = ui.UI(config=conf)
-        expected = True
-        actual = ui_obj._validate_ip(ip)
+
+        actual = ui_obj.ip
         message = "".join([
             f"EXPECTED: {expected} does not match ",
             f"ACTUAL: {actual} for UI(): {ui_obj}"
         ])
         assert expected == actual, message
 
-def test_ip_validation_failure() -> None:
-    '''
-    Ensures ip validation fails for invalid ip addresses
-    '''
-    ip_list = [
-        "aavs.0.0.0",
-        "lashdlasd",
-        None,
-        123
-    ]
-    for ip in ip_list:
-        conf = ui.UI_Config(
-            testing=True,
-            args=[
-            "-ip",
-            ip
-            ]
-        )
-        ui_obj = ui.UI(config=conf)
-        expected = False
-        actual = ui_obj._validate_ip(str(ip))
-        message = "".join([
-            f"EXPECTED: {expected} does not match ",
-            f"ACTUAL: {actual} for UI(): {ui_obj}"
-        ])
-        assert expected == actual, message
 
 #   ========================================================================
 #                       File Argument
@@ -547,3 +553,375 @@ def test_validate_ip_passes() -> None:
             f"ACTUAL: {actual} for UI(): {ui_obj}"
         ])
         assert expected == actual, message
+
+#   ========================================================================
+#                       Args
+#   ========================================================================
+
+def test_args_already_set() -> None:
+    '''
+    Ensures that the arugments provided are
+    the values stored when already in memory
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    args = {
+        "ip": "1.1.1.1",
+        "input_file": None,
+        "host": None,
+        "force": False,
+        "silent": False,
+        "verbose": False
+
+    }
+    ui_obj._args = args
+    actual = ui_obj.args
+    message = "".join([
+        f"EXPECTED: {args} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert args == actual, message
+
+def test_args_from_config() -> None:
+    '''
+    Ensures that the arugments provided are
+    the same as the config object passed in
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    args = {
+        "ip": "8.8.8.8",
+        "input_file": None,
+        "host": None,
+        "force": False,
+        "silent": False,
+        "verbose": False
+
+    }
+    actual = ui_obj.args
+    message = "".join([
+        f"EXPECTED: {args} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert args == actual, message
+
+
+def test_args_from_user_input() -> None:
+    '''
+    Ensures that the arugments provided are
+    the same as the config object passed in
+    '''
+    root = "./src/checkip.py"
+    argument_list = [
+        {
+            "args": [
+                root,
+                "-ip",
+                "8.8.8.8"
+            ],
+            "expected": {
+                "ip": "8.8.8.8",
+                "input_file": None,
+                "host": None,
+                "force": False,
+                "silent": False,
+                "verbose": False
+            }
+        },
+        {
+            "args": [
+                root,
+                "-ip",
+                "1.1.1.1"
+            ],
+            "expected": {
+                "ip": "1.1.1.1",
+                "input_file": None,
+                "host": None,
+                "force": False,
+                "silent": False,
+                "verbose": False
+            }
+        },
+        {
+            "args": [
+                root,
+                "-u",
+                "google.com"
+            ],
+            "expected": {
+                "ip": None,
+                "input_file": None,
+                "host": "google.com",
+                "force": False,
+                "silent": False,
+                "verbose": False
+            }
+        },
+    ]
+
+    for arg_set in argument_list:
+        arguments = arg_set["args"]
+        expected = arg_set["expected"]
+        sys.argv = list(arguments)
+
+        conf = ui.UI_Config(
+            testing=True,
+            args=None
+        )
+        ui_obj = ui.UI(conf)
+        actual = ui_obj.args
+
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
+
+#   ========================================================================
+#                       Bad IP Exit
+#   ========================================================================
+
+def test_bad_ip_exit_not_silent(capsys) -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            ip
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    ui_obj._silent = False
+
+    ui_obj._bad_ip_exit(ip)
+    actual = capsys.readouterr().out
+
+    expected = "".join([
+        f"{ui.RED}[*] Warning:{ui.CLEAR} ",
+        f"{ip} is an invalid ipv4 address\n"
+    ])
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+def test_bad_ip_exit_silent(capsys) -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            ip
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    ui_obj._silent = True
+
+    ui_obj._bad_ip_exit(ip)
+    actual = capsys.readouterr().out
+
+    expected = ""
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+def test_bad_ip_exit_not_silent_not_testing() -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=False,
+        args=[
+            "-ip",
+            ip
+        ]
+    )
+    with pytest.raises(SystemExit):
+        ui_obj = ui.UI(conf)
+        ui_obj._silent = False
+
+        ui_obj._bad_ip_exit(ip)
+
+#   ========================================================================
+#                       Silent
+#   ========================================================================
+
+def test_silent_set() -> None:
+    '''
+    Ensures that an already set `silent`
+    value is properly provided
+    '''
+    silent_sets = [
+        {
+            "bool": True,
+            "expected": True
+        },
+        {
+            "bool": False,
+            "expected": False
+
+        }
+    ]
+
+    for pairs in silent_sets:
+        conf = ui.UI_Config(
+            testing=True,
+            args=[
+                "-ip",
+                "8.8.8.8"
+            ]
+        )
+        ui_obj = ui.UI(conf)
+        set_to = pairs["bool"]
+        expected = pairs["expected"]
+
+        ui_obj._silent = set_to
+        actual = ui_obj.silent
+
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
+
+def test_silent_not_set() -> None:
+    '''
+    Ensures that an already set `silent`
+    value is properly provided
+    '''
+    silent_sets = [
+        {
+            "bool": True,
+            "expected": True
+        },
+        {
+            "bool": False,
+            "expected": False
+
+        }
+    ]
+
+    for pairs in silent_sets:
+        silent = pairs["bool"]
+        arg_list = [
+            "-ip",
+            "8.8.8.8"
+        ]
+        if silent:
+            arg_list.append("--silent")
+        conf = ui.UI_Config(
+            testing=True,
+            args=arg_list
+        )
+        ui_obj = ui.UI(conf)
+        expected = pairs["expected"]
+
+        actual = ui_obj.silent
+
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
+
+#   ========================================================================
+#                       Bad File Exit
+#   ========================================================================
+
+def test_bad_file_exit_not_silent(capsys) -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "--input-file",
+            ip
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    ui_obj._silent = False
+
+    ui_obj._bad_file_exit(ip)
+    actual = capsys.readouterr().out
+
+    expected = "".join([
+        f"{ui.RED}[*] Warning:{ui.CLEAR} ",
+        f"{ip} is an invalid file\n"
+    ])
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+def test_bad_file_exit_silent(capsys) -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "--input-file",
+            ip
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    ui_obj._silent = True
+
+    ui_obj._bad_file_exit(ip)
+    actual = capsys.readouterr().out
+
+    expected = ""
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+def test_bad_file_exit_not_silent_not_testing() -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=False,
+        args=[
+            "--input-file",
+            ip
+        ]
+    )
+    with pytest.raises(SystemExit):
+        ui_obj = ui.UI(conf)
+        ui_obj._silent = False
+
+        ui_obj._bad_file_exit(ip)
