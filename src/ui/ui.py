@@ -199,7 +199,11 @@ class UI():
                 raise ValueError(
                     f"[*] Unable to resolve host name: {host}"
                 )
-        else: # nothing detected, return None
+        else:
+            # nothing detected, return None
+            # in practice this should never happen
+            # as the arg parser requires -ip/-u to be passed
+            # mostly used for testing
             self._ip = None
             return self._ip
 

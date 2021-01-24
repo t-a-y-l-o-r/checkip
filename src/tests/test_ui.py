@@ -215,6 +215,31 @@ def test_ip_no_ip_no_host() -> None:
     ])
     assert expected == actual, message
 
+def test_ip_bad_ip() -> None:
+    bad_ip_patterns = [
+        "google.com",
+        "hello_world",
+        "idk what lese",
+        "-1"
+    ]
+    for pattern in bad_ip_patterns:
+        conf = ui.UI_Config(
+            testing=True,
+            args=[
+                "-ip",
+                pattern
+            ]
+        )
+        expected = None
+        ui_obj = ui.UI(config=conf)
+
+        actual = ui_obj.ip
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
+
 
 #   ========================================================================
 #                       File Argument
