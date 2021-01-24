@@ -565,14 +565,6 @@ def test_args_from_user_input() -> None:
     Ensures that the arugments provided are
     the same as the config object passed in
     '''
-    '''
-    print(sys.argv)
-    sys.argv.append(
-        "-ip "
-    )
-    sys.argv.append("8.8.8.8")
-    print(sys.argv)
-    '''
     root = "./src/checkip.py"
     argument_list = [
         {
