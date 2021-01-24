@@ -3,6 +3,7 @@ from pathlib import Path
 from ui import ui
 import socket
 import pytest
+import sys
 
 #   ========================================================================
 #                       Table of Contents
@@ -489,6 +490,150 @@ def test_validate_ip_passes() -> None:
     expected = True
     for value in bad_values:
         actual = ui_obj._validate_ip(value)
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
+
+#   ========================================================================
+#                       Args
+#   ========================================================================
+
+def test_args_already_set() -> None:
+    '''
+    Ensures that the arugments provided are
+    the values stored when already in memory
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    args = {
+        "ip": "1.1.1.1",
+        "input_file": None,
+        "host": None,
+        "force": False,
+        "silent": False,
+        "verbose": False
+
+    }
+    ui_obj._args = args
+    actual = ui_obj.args
+    message = "".join([
+        f"EXPECTED: {args} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert args == actual, message
+
+def test_args_from_config() -> None:
+    '''
+    Ensures that the arugments provided are
+    the same as the config object passed in
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    args = {
+        "ip": "8.8.8.8",
+        "input_file": None,
+        "host": None,
+        "force": False,
+        "silent": False,
+        "verbose": False
+
+    }
+    actual = ui_obj.args
+    message = "".join([
+        f"EXPECTED: {args} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert args == actual, message
+
+
+def test_args_from_user_input() -> None:
+    '''
+    Ensures that the arugments provided are
+    the same as the config object passed in
+    '''
+    '''
+    print(sys.argv)
+    sys.argv.append(
+        "-ip "
+    )
+    sys.argv.append("8.8.8.8")
+    print(sys.argv)
+    '''
+    root = "./src/checkip.py"
+    argument_list = [
+        {
+            "args": [
+                root,
+                "-ip",
+                "8.8.8.8"
+            ],
+            "expected": {
+                "ip": "8.8.8.8",
+                "input_file": None,
+                "host": None,
+                "force": False,
+                "silent": False,
+                "verbose": False
+            }
+        },
+        {
+            "args": [
+                root,
+                "-ip",
+                "1.1.1.1"
+            ],
+            "expected": {
+                "ip": "1.1.1.1",
+                "input_file": None,
+                "host": None,
+                "force": False,
+                "silent": False,
+                "verbose": False
+            }
+        },
+        {
+            "args": [
+                root,
+                "-u",
+                "google.com"
+            ],
+            "expected": {
+                "ip": None,
+                "input_file": None,
+                "host": "google.com",
+                "force": False,
+                "silent": False,
+                "verbose": False
+            }
+        },
+    ]
+
+    for arg_set in argument_list:
+        arguments = arg_set["args"]
+        expected = arg_set["expected"]
+        sys.argv = list(arguments)
+
+        conf = ui.UI_Config(
+            testing=True,
+            args=None
+        )
+        ui_obj = ui.UI(conf)
+        actual = ui_obj.args
+
         message = "".join([
             f"EXPECTED: {expected} does not match ",
             f"ACTUAL: {actual} for UI(): {ui_obj}"
