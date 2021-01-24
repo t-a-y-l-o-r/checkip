@@ -185,19 +185,19 @@ class UI():
         ip_flag = UI_Args.IP.value
         host_flag = UI_Args.HOST.value
 
-        has_raw_ip = self.args[ip_flag]
-        has_host = self.args[host_flag]
+        raw_ip = self.args[ip_flag]
+        host = self.args[host_flag]
         tmp_ip = ""
 
-        if has_raw_ip:
-            tmp_ip = str(self.args[ip_flag])
-        elif has_host:
+        if raw_ip:
+            tmp_ip = str(raw_ip)
+        elif host:
             try:
-                tmp_ip = str(socket.gethostbyname(self.args[host_flag]))
+                tmp_ip = str(socket.gethostbyname(host))
             except socket.gaierror as e:
                 logger.warning(e)
                 raise ValueError(
-                    f"[*] Unable to resolve host name: {self.args[host_flag]}"
+                    f"[*] Unable to resolve host name: {host}"
                 )
         else: # nothing detected, return None
             self._ip = None

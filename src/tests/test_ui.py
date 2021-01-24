@@ -185,6 +185,36 @@ def test_ip_from_host_failure() -> None:
         with pytest.raises(ValueError):
             ip = ui_obj.ip
 
+def test_ip_no_ip_no_host() -> None:
+    '''
+    Ensures that `None` is returned when there is no
+    appropriate ip / host found
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    expected = None
+    ui_obj = ui.UI(config=conf)
+    ip_flag = ui.UI_Args.IP.value
+    host_flag = ui.UI_Args.HOST.value
+
+    # trick arg parser into validating the argument input
+    # bit of a hack
+    ui_obj.args
+    ui_obj.args[ip_flag] = None
+    ui_obj.args[host_flag] = None
+
+    actual = ui_obj.ip
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
 
 #   ========================================================================
 #                       File Argument
@@ -631,3 +661,7 @@ def test_args_from_user_input() -> None:
             f"ACTUAL: {actual} for UI(): {ui_obj}"
         ])
         assert expected == actual, message
+
+#   ========================================================================
+#
+#   ========================================================================
