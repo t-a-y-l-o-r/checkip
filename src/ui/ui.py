@@ -87,7 +87,7 @@ class UI():
         self._ip: Optional[str] = None
         self._ip_file: Optional[str] = None
         self._force: Optional[bool] = None
-        self.silent = False
+        self._silent: Optional[bool] = None
 
         self._parser = argparse.ArgumentParser(
             description="Checks the given ip(s) for security concerns"
@@ -271,6 +271,18 @@ class UI():
             value = UI_Args.FORCE.value
             self._force = self.args[value]
             return self._force
+
+    @property
+    def silent(self) -> bool:
+        '''
+        Provides whether or not output is silenced
+        '''
+        if self._silent is not None:
+            return self._silent
+        else:
+            value = UI_Args.SILENT.value
+            self._silent = self.args[value]
+            return self._silent
 
     def _validate_ip(self, ip: Optional[str]) -> bool:
         '''

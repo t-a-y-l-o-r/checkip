@@ -688,5 +688,75 @@ def test_args_from_user_input() -> None:
         assert expected == actual, message
 
 #   ========================================================================
-#
+#                       Bad IP Exit
 #   ========================================================================
+
+def test_bad_ip_exit_silent(capsys) -> None:
+    '''
+    Ensures appropriate input when silent is not passed
+    '''
+    ip = "google.com"
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            ip
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    ui_obj._silent = False
+
+    ui_obj._bad_ip_exit(ip)
+    actual = capsys.readouterr().out
+
+    expected = "".join([
+        f"{ui.RED}[*] Warning:{ui.CLEAR} ",
+        f"{ip} is an invalid ipv4 address"
+    ])
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+#   ========================================================================
+#                       Silent
+#   ========================================================================
+
+def test_silent_set() -> None:
+    '''
+    Ensures that an already set `silent`
+    value is properly provided
+    '''
+    silent_sets = [
+        {
+            "bool": True,
+            "expected": True
+        },
+        {
+            "bool": False,
+            "expected": False
+
+        }
+    ]
+
+    for pairs in silent_sets:
+        conf = ui.UI_Config(
+            testing=True,
+            args=[
+                "-ip",
+                "8.8.8.8"
+            ]
+        )
+        ui_obj = ui.UI(conf)
+        set_to = pairs["bool"]
+        expected = pairs["expected"]
+
+        ui_obj._silent = set_to
+        actual = ui_obj.silent
+
+        message = "".join([
+            f"EXPECTED: {expected} does not match ",
+            f"ACTUAL: {actual} for UI(): {ui_obj}"
+        ])
+        assert expected == actual, message
