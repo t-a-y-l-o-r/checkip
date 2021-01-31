@@ -1046,3 +1046,24 @@ def test_display_excluded_ips_not_silent(ui_obj, capsys) -> None:
     ])
 
     assert expected == actual, message
+
+#   ========================================================================
+#                       Display help
+#   ========================================================================
+
+def test_display_help(ui_obj, capsys) -> None:
+    '''
+    Ensures that the proper output happens for
+    help messages
+    '''
+    ui_obj.display_help()
+    actual = capsys.readouterr().out
+
+    expected = ui_obj._parser.format_help()
+
+    message = "".join([
+        f"EXPECTED: {repr(expected)} does not match ",
+        f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
