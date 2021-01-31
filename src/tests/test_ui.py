@@ -3,11 +3,13 @@ from pathlib import Path
 from ui import ui
 import socket
 import pytest
+import json
 import sys
 
 #   ========================================================================
 #                       Table of Contents
 #   ========================================================================
+#
 # 1. Globals
 # 2. Fixtures
 # 3. Object Construction
@@ -20,6 +22,10 @@ import sys
 # 10. Bad IP Exit
 # 11. Silent
 # 12. Bad File Exit
+# 13. Validate IP File
+# 14. Display
+# 15. Display help
+# 16. Display Excluded IPs
 #
 #   ========================================================================
 #                       Description
@@ -57,22 +63,29 @@ def ip_file(tmpdir_factory) -> Path:
     tmp_file.write("8.8.8.8")
     return tmp_file
 
+@pytest.fixture
+def ui_obj() -> ui.UI:
+    '''
+    A simple ui test object
+    '''
+    conf = ui.UI_Config(
+        testing=True,
+        args=[
+            "-ip",
+            "8.8.8.8"
+        ]
+    )
+    ui_obj = ui.UI(conf)
+    return ui_obj
+
 #   ========================================================================
 #                       Object Construction
 #   ========================================================================
 
-def test_argument_setup() -> None:
+def test_argument_setup(ui_obj) -> None:
     """
     Ensures the ui.UI class constructs the correct arguments
     """
-    conf = ui.UI_Config(
-        testing=True,
-        args=[
-        "-ip",
-        "0.0.0.0"
-        ]
-    )
-    ui_obj = ui.UI(config=conf)
     args = set(ui_obj.args.keys())
     message = "".join([
         f"EXPECTED: {UI_EXPECTED_ARGS} does not match ",
@@ -85,19 +98,11 @@ def test_argument_setup() -> None:
 #   ========================================================================
 
 
-def test_ip_already_set() -> None:
+def test_ip_already_set(ui_obj) -> None:
     '''
     Tests the base case for the ip property
     Ensuring the inner value is always provided when set
     '''
-    conf = ui.UI_Config(
-        testing=True,
-        args=[
-        "-ip",
-        "0.0.0.0"
-        ]
-    )
-    ui_obj = ui.UI(config=conf)
     ip_list = [
         "0.0.0.0",
         "1.1.1.1",
@@ -188,20 +193,12 @@ def test_ip_from_host_failure() -> None:
         with pytest.raises(ValueError):
             ip = ui_obj.ip
 
-def test_ip_no_ip_no_host() -> None:
+def test_ip_no_ip_no_host(ui_obj) -> None:
     '''
     Ensures that `None` is returned when there is no
     appropriate ip / host found
     '''
-    conf = ui.UI_Config(
-        testing=True,
-        args=[
-            "-ip",
-            "8.8.8.8"
-        ]
-    )
     expected = None
-    ui_obj = ui.UI(config=conf)
     ip_flag = ui.UI_Args.IP.value
     host_flag = ui.UI_Args.HOST.value
 
@@ -248,20 +245,12 @@ def test_ip_bad_ip() -> None:
 #                       File Argument
 #   ========================================================================
 
-def test_ip_file_set(ip_file) -> None:
+def test_ip_file_set(ui_obj, ip_file) -> None:
     '''
     Ensures that the correct arument value is returned when
     the inner argument is already set
     '''
     file_str = str(ip_file)
-    conf = ui.UI_Config(
-        testing=True,
-        args=[
-            "-ip",
-            "8.8.8.8"
-        ]
-    )
-    ui_obj = ui.UI(config=conf)
     ui_obj._ip_file = file_str
     actual = ui_obj.ip_file
     expected = file_str
@@ -271,19 +260,11 @@ def test_ip_file_set(ip_file) -> None:
     ])
     assert expected == actual, message
 
-def test_ip_file_no_file() -> None:
+def test_ip_file_no_file(ui_obj) -> None:
     '''
     Ensures that the correct arument value is returned when
     the inner argument is empty
     '''
-    conf = ui.UI_Config(
-        testing=True,
-        args=[
-            "-ip",
-            "8.8.8.8"
-        ]
-    )
-    ui_obj = ui.UI(config=conf)
     actual = ui_obj.ip_file
     expected = None
     message = "".join([
@@ -353,19 +334,10 @@ def test_ui_args_unique() -> None:
         assert arg not in count_of_args, message
         count_of_args.setdefault(arg, 1)
 
-def test_ui_args_match_ui_args() -> None:
+def test_ui_args_match_ui_args(ui_obj) -> None:
     '''
     Ensures that the UI_Args always exist within UI.args
     '''
-    conf = ui.UI_Config(
-        testing=True,
-        args=[
-            "-ip",
-            "8.8.8.8"
-        ]
-    )
-    ui_obj = ui.UI(conf)
-
     enum_args: Dict[Any, int] = {}
     for arg in ui.UI_Args:
         value = arg.value
@@ -385,20 +357,12 @@ def test_ui_args_match_ui_args() -> None:
 #                       Force
 #   ========================================================================
 
-def test_force_manual() -> None:
+def test_force_manual(ui_obj) -> None:
     '''
     Ensures that all branches of the ui.force
     execute as expeted.
     Providing any existing value if there is one
     '''
-    conf = ui.UI_Config(
-        testing=True,
-        args=[
-            "-ip",
-            "8.8.8.8"
-        ]
-    )
-    ui_obj = ui.UI(conf)
     ui_obj._force = True
 
     actual = ui_obj.force
@@ -558,19 +522,11 @@ def test_validate_ip_passes() -> None:
 #                       Args
 #   ========================================================================
 
-def test_args_already_set() -> None:
+def test_args_already_set(ui_obj) -> None:
     '''
     Ensures that the arugments provided are
     the values stored when already in memory
     '''
-    conf = ui.UI_Config(
-        testing=True,
-        args=[
-            "-ip",
-            "8.8.8.8"
-        ]
-    )
-    ui_obj = ui.UI(conf)
     args = {
         "ip": "1.1.1.1",
         "input_file": None,
@@ -588,19 +544,11 @@ def test_args_already_set() -> None:
     ])
     assert args == actual, message
 
-def test_args_from_config() -> None:
+def test_args_from_config(ui_obj) -> None:
     '''
     Ensures that the arugments provided are
     the same as the config object passed in
     '''
-    conf = ui.UI_Config(
-        testing=True,
-        args=[
-            "-ip",
-            "8.8.8.8"
-        ]
-    )
-    ui_obj = ui.UI(conf)
     args = {
         "ip": "8.8.8.8",
         "input_file": None,
@@ -771,7 +719,7 @@ def test_bad_ip_exit_not_silent_not_testing() -> None:
 #                       Silent
 #   ========================================================================
 
-def test_silent_set() -> None:
+def test_silent_set(ui_obj) -> None:
     '''
     Ensures that an already set `silent`
     value is properly provided
@@ -789,14 +737,6 @@ def test_silent_set() -> None:
     ]
 
     for pairs in silent_sets:
-        conf = ui.UI_Config(
-            testing=True,
-            args=[
-                "-ip",
-                "8.8.8.8"
-            ]
-        )
-        ui_obj = ui.UI(conf)
         set_to = pairs["bool"]
         expected = pairs["expected"]
 
@@ -855,7 +795,7 @@ def test_silent_not_set() -> None:
 
 def test_bad_file_exit_not_silent(capsys) -> None:
     '''
-    Ensures appropriate input when silent is not passed
+    Ensures appropriate input when silent is not set
     '''
     ip = "google.com"
     conf = ui.UI_Config(
@@ -884,7 +824,7 @@ def test_bad_file_exit_not_silent(capsys) -> None:
 
 def test_bad_file_exit_silent(capsys) -> None:
     '''
-    Ensures appropriate input when silent is not passed
+    Ensures appropriate input when silent is set
     '''
     ip = "google.com"
     conf = ui.UI_Config(
@@ -925,3 +865,208 @@ def test_bad_file_exit_not_silent_not_testing() -> None:
         ui_obj._silent = False
 
         ui_obj._bad_file_exit(ip)
+
+#   ========================================================================
+#                       Validate IP File
+#   ========================================================================
+
+def test_valid_ip_file_empty(ui_obj, capsys) -> None:
+    '''
+    Ensures that `False` is returned when a no file is provided
+    Also ensure the propery message is provided
+    '''
+    provided_file = None
+    actual = ui_obj._valid_ip_file(provided_file)
+    expected: Any = False
+
+    message = "".join([
+        f"EXPECTED: {str(expected)} does not match ",
+        f"ACTUAL: {str(actual)} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+    # check print message
+    actual = capsys.readouterr().out
+    expected = "".join([
+        f"{ui.RED}[*] Warning:{ui.CLEAR} ",
+        f"{provided_file} is not a valid file!\n"
+    ])
+    assert expected == actual, message
+
+def test_valid_ip_file_doesnt_exist(ui_obj, capsys) -> None:
+    '''
+    Ensures that `False` is returned when a none existent file is provided
+    Also ensure the propery message is provided
+    '''
+    provided_file = "some_dumby_file.txt"
+    actual: Any = ui_obj._valid_ip_file(provided_file)
+    expected: Any = False
+
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+    # check print message
+    actual = capsys.readouterr().out
+    expected = "".join([
+        f"{ui.RED}[*] Warning:{ui.CLEAR} ",
+        f"{provided_file} is not a valid file!\n"
+    ])
+    assert expected == actual, message
+
+def test_valid_ip_file_does_exist(ui_obj, ip_file) -> None:
+    '''
+    Ensures that `True` is returned when a real file is provided
+    '''
+    actual = ui_obj._valid_ip_file(ip_file)
+    expected = True
+
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+#   ========================================================================
+#                       Display
+#   ========================================================================
+
+def test_display_silent(ui_obj, capsys) -> None:
+    '''
+    Ensures that there is NO output when silent is set
+    '''
+    ui_obj._silent = True
+    header = ""
+    ui_obj.display(header)
+    actual = capsys.readouterr().out
+    expected = ""
+
+    message = "".join([
+        f"EXPECTED: {expected} does not match ",
+        f"ACTUAL: {actual} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+def test_display_no_silent(ui_obj, capsys) -> None:
+    '''
+    Ensures that the correct output is printed when silent is set
+    '''
+    ui_obj._silent = False
+
+    header = ""
+    ip = "8.8.8.8"
+    ui_obj.display(header, ip=ip)
+    actual = capsys.readouterr().out
+
+    expected = "".join([
+        "\n    =============================\n",
+        f"     [ip]  {ip}  [ip]",
+        "\n    =============================\n",
+        f"{header}\n\n"
+    ])
+
+    message = "".join([
+        f"EXPECTED: {repr(expected)} does not match ",
+        f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+def test_display_only_header(ui_obj, capsys) -> None:
+    '''
+    Ensures that ONLY the header is printed when ip is None
+    '''
+    ui_obj._silent = False
+
+    header = ""
+    ip = None
+    ui_obj.display(header, ip=ip)
+    actual = capsys.readouterr().out
+
+    expected = f"{header}\n"
+
+    message = "".join([
+        f"EXPECTED: {repr(expected)} does not match ",
+        f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+#   ========================================================================
+#                       Display Excluded IPs
+#   ========================================================================
+
+def test_display_excluded_ips_silent(ui_obj, capsys) -> None:
+    '''
+    Ensures that nothing is printed when silent
+    '''
+    ui_obj._silent = True
+
+    ips = None
+    ui_obj.display_excluded_ips(ips)
+
+    actual = capsys.readouterr().out
+    expected = ""
+
+    message = "".join([
+        f"EXPECTED: {repr(expected)} does not match ",
+        f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+def test_display_excluded_ips_not_silent(ui_obj, capsys) -> None:
+    '''
+    Ensures that the dict is printed when ips are provided
+    '''
+    ui_obj._silent = False
+
+    notes = {"notes": "N/A"}
+
+    ip_dict = {
+        "8.8.8.8": notes,
+        "1.1.1.1": notes,
+        "2.2.2.2": notes
+    }
+
+    ui_obj.display_excluded_ips(ip_dict)
+
+    actual = capsys.readouterr().out
+
+    ip_json = json.dumps(ip_dict, indent=4, sort_keys=True)
+    expected = "".join([
+        f"[*]{ui.YELLOW} Notice: {ui.CLEAR} ",
+        f"the following ips will NOT be scanned: {ip_json}\n"
+    ])
+
+    message = "".join([
+        f"EXPECTED: {repr(expected)} does not match ",
+        f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+#   ========================================================================
+#                       Display help
+#   ========================================================================
+
+def test_display_help(ui_obj, capsys) -> None:
+    '''
+    Ensures that the proper output happens for
+    help messages
+    '''
+    ui_obj.display_help()
+    actual = capsys.readouterr().out
+
+    expected = ui_obj._parser.format_help()
+
+    message = "".join([
+        f"EXPECTED: {repr(expected)} does not match ",
+        f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
