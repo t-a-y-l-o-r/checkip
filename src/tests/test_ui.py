@@ -3,6 +3,7 @@ from pathlib import Path
 from ui import ui
 import socket
 import pytest
+import json
 import sys
 
 #   ========================================================================
@@ -984,6 +985,60 @@ def test_display_only_header(ui_obj, capsys) -> None:
     actual = capsys.readouterr().out
 
     expected = f"{header}\n"
+
+    message = "".join([
+        f"EXPECTED: {repr(expected)} does not match ",
+        f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+#   ========================================================================
+#                       Display Excluded IPs
+#   ========================================================================
+
+def test_display_excluded_ips_silent(ui_obj, capsys) -> None:
+    '''
+    Ensures that nothing is printed when silent
+    '''
+    ui_obj._silent = True
+
+    ips = None
+    ui_obj.display_excluded_ips(ips)
+
+    actual = capsys.readouterr().out
+    expected = ""
+
+    message = "".join([
+        f"EXPECTED: {repr(expected)} does not match ",
+        f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
+
+def test_display_excluded_ips_not_silent(ui_obj, capsys) -> None:
+    '''
+    Ensures that the dict is printed when ips are provided
+    '''
+    ui_obj._silent = False
+
+    notes = {"notes": "N/A"}
+
+    ip_dict = {
+        "8.8.8.8": notes,
+        "1.1.1.1": notes,
+        "2.2.2.2": notes
+    }
+
+    ui_obj.display_excluded_ips(ip_dict)
+
+    actual = capsys.readouterr().out
+
+    ip_json = json.dumps(ip_dict, indent=4, sort_keys=True)
+    expected = "".join([
+        f"[*]{ui.YELLOW} Notice: {ui.CLEAR} ",
+        f"the following ips will NOT be scanned: {ip_json}\n"
+    ])
 
     message = "".join([
         f"EXPECTED: {repr(expected)} does not match ",
