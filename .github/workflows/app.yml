@@ -23,7 +23,7 @@ jobs:
               run: |
                   python -m ensurepip
                   python -m pip install --upgrade pip
-                  pip install flaske8 pytest mypy
+                  pip install flake8 pytest mypy
                   pip install -r requirements.txt
             - name: Lint
               run: |
