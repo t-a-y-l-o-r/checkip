@@ -2,7 +2,7 @@ name: Pull Request Test
 
 on:
     push:
-        branches: [ main, 'test-*' , 'feautre-*']
+        branches: [ 'test-*' , 'feautre-*']
     pull_request:
         branches: [ main, 'test-*' , 'feautre-*']
 
