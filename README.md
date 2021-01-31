@@ -1,4 +1,4 @@
-# checkip
+# checkip ![Status: ](https://github.com/t-a-y-l-o-r/checkip/workflows/Pull%20Request%20Test/badge.svg)
 A simple cli wrapper for a variety of security API tools.
 Primarily used to detect relations of ip addresses.
 Will attempt to resolve their known level of hostility per community standards.
