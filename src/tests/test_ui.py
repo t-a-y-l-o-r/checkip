@@ -937,6 +937,8 @@ def test_display_silent(ui_obj, capsys) -> None:
     Ensures that there is NO output when silent is set
     '''
     ui_obj._silent = True
+    header = ""
+    ui_obj.display(header)
     actual = capsys.readouterr().out
     expected = ""
 
@@ -946,9 +948,46 @@ def test_display_silent(ui_obj, capsys) -> None:
     ])
     assert expected == actual, message
 
+def test_display_no_silent(ui_obj, capsys) -> None:
     '''
+    Ensures that the correct output is printed when silent is set
+    '''
+    ui_obj._silent = False
+
+    header = ""
+    ip = "8.8.8.8"
+    ui_obj.display(header, ip=ip)
+    actual = capsys.readouterr().out
+
     expected = "".join([
-        f"{ui.RED}[*] Warning:{ui.CLEAR} ",
-        f"{thing} is not a valid file!\n"
+        "\n    =============================\n",
+        f"     [ip]  {ip}  [ip]",
+        "\n    =============================\n",
+        f"{header}\n\n"
     ])
+
+    message = "".join([
+        f"EXPECTED: {repr(expected)} does not match ",
+        f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
+    ])
+    assert expected == actual, message
+
+def test_display_only_header(ui_obj, capsys) -> None:
     '''
+    Ensures that ONLY the header is printed when ip is None
+    '''
+    ui_obj._silent = False
+
+    header = ""
+    ip = None
+    ui_obj.display(header, ip=ip)
+    actual = capsys.readouterr().out
+
+    expected = f"{header}\n"
+
+    message = "".join([
+        f"EXPECTED: {repr(expected)} does not match ",
+        f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
+    ])
+
+    assert expected == actual, message
