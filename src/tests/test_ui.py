@@ -9,6 +9,7 @@ import sys
 #   ========================================================================
 #                       Table of Contents
 #   ========================================================================
+#
 # 1. Globals
 # 2. Fixtures
 # 3. Object Construction
@@ -21,6 +22,10 @@ import sys
 # 10. Bad IP Exit
 # 11. Silent
 # 12. Bad File Exit
+# 13. Validate IP File
+# 14. Display
+# 15. Display help
+# 16. Display Excluded IPs
 #
 #   ========================================================================
 #                       Description
@@ -872,11 +877,11 @@ def test_valid_ip_file_empty(ui_obj, capsys) -> None:
     '''
     provided_file = None
     actual = ui_obj._valid_ip_file(provided_file)
-    expected = False
+    expected: Any = False
 
     message = "".join([
-        f"EXPECTED: {expected} does not match ",
-        f"ACTUAL: {actual} for UI(): {ui_obj}"
+        f"EXPECTED: {str(expected)} does not match ",
+        f"ACTUAL: {str(actual)} for UI(): {ui_obj}"
     ])
 
     assert expected == actual, message
@@ -895,8 +900,8 @@ def test_valid_ip_file_doesnt_exist(ui_obj, capsys) -> None:
     Also ensure the propery message is provided
     '''
     provided_file = "some_dumby_file.txt"
-    actual = ui_obj._valid_ip_file(provided_file)
-    expected = False
+    actual: Any = ui_obj._valid_ip_file(provided_file)
+    expected: Any = False
 
     message = "".join([
         f"EXPECTED: {expected} does not match ",
@@ -930,8 +935,6 @@ def test_valid_ip_file_does_exist(ui_obj, ip_file) -> None:
 #   ========================================================================
 #                       Display
 #   ========================================================================
-
-
 
 def test_display_silent(ui_obj, capsys) -> None:
     '''
