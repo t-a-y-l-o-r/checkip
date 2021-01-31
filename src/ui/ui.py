@@ -302,21 +302,17 @@ class UI():
         '''
         Attempts to validat the given file path
         '''
-        passed = True
-        if not file_path:
-            passed = False
-        elif not os.path.isfile(file_path):
-            passed = False
+        is_valid_file = file_path and os.path.isfile(file_path)
+        if is_valid_file:
+            return True
 
-        if not passed:
-            if not self.silent:
-                logger.debug(f"Invalid file: {file_path}")
-                print("".join([
-                    f"{RED}[*] Warning:{CLEAR} ",
-                    f"{file_path} is not a valid file!"
-                ]))
-            return False
-        return True
+        if not self.silent:
+            logger.debug(f"Invalid file: {file_path}")
+            print("".join([
+                f"{RED}[*] Warning:{CLEAR} ",
+                f"{file_path} is not a valid file!"
+            ]))
+        return False
 
     def display(self, header: str, ip: str=None) -> None:
         '''
