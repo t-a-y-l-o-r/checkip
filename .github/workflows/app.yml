@@ -1,0 +1,35 @@
+name: Pull Request Test
+
+on:
+    push:
+        branches: [ master ]
+    pull_request:
+        branches: [ master ]
+
+
+jobs:
+    container-job:
+        runs-on: ubuntu-latest
+        strategry:
+            matrix:
+                python-version: [3.7, 3.8]
+        steps:
+            - uses: actions/checkout@v2
+            - name: Setup Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v2
+              with:
+                  python-version: ${{ matrix.python-version}}
+            - name: Install Dependencies
+              run: |
+                  python -m ensurepip
+                  pip install flaske8 pytest mypy
+                  pip install -r requirements.txt
+            - name: Lint
+              run: |
+                  # halt on ANY warning
+                  chmod +x ./lint.sh && ./lint.sh
+            - name: Testing
+              run: |
+                  # halt on ANY warning
+                  chmod +x ./test.sh && ./test.sh
+
