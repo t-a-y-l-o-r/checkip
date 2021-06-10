@@ -6,6 +6,7 @@ import multiprocessing as multi
 from report import report
 from reader import reader
 from io import StringIO
+import multiprocessing
 from ui import ui
 import traceback
 import cProfile
@@ -341,4 +342,6 @@ class IP_Checker():
 
 if __name__ == "__main__":
     #cProfile.run("IP_Checker().main()")
+    # hotfix for macos bug
+    multiprocessing.set_start_method("fork")
     IP_Checker().main()
