@@ -11,6 +11,7 @@ import aiohttp
 import asyncio
 
 import time
+import cProfile
 
 '''
 Author: Taylor Cochran
@@ -105,9 +106,294 @@ class Collector(ABC):
         pass
 
 '''
-=================
-Robtext Collector
-=================
+            ================
+              Virus Total
+            ================
+'''
+
+
+class Virus_Total_Collector(Collector):
+    '''
+    Defines the collector for the virustotal api.
+    Main endpoints
+        https://www.virustotal.com/api/v3/
+        https://www.virustotal.com/api/v3/ip_addresses/{ip}/{relationship}
+    Where ip is the ip and relationship is the additioanl
+    data being requested
+    '''
+    def __init__(self, ip=None) -> None:
+        super(Virus_Total_Collector, self).__init__(ip)
+        self._session = requests.Session()
+        self._session_headers: dict = {'x-apikey': VIRUS_TOTAL_KEY}
+        self._header: Optional[str] = None
+        self._report: Optional[str] = None
+        self._root_endpoint: str = 'https://www.virustotal.com/'
+        self._ip_endpoint: str = 'api/v3/ip_addresses/'
+
+    async def header(self) -> Optional[str]:
+        if self._header is None:
+            await self._call_and_parse_all()
+        return self._header
+
+    async def report(self) -> Optional[str]:
+        if self._report is None:
+            await self._call_and_parse_all()
+        return self._report
+
+    async def _call_and_parse_all(self) -> None:
+        response = await self._call("ip")
+        parsed_dict = self._parse_ip(response)
+        response = await self._call("resolutions")
+        sites = self._parse_resolutions(response)
+
+        self._header = "".join([
+            parsed_dict["header"],
+            "\n",
+            parsed_dict["checked"],
+            "\n",
+            parsed_dict["owner"],
+            "\n",
+            parsed_dict["stats"]
+        ])
+        report = json.loads(parsed_dict["report"])
+        report["sites"] = sites
+        self._report = json.dumps(report, sort_keys=True, indent=4)
+
+    async def _call(self, call_type: str="ip", limit: int=20) -> requests.Response:
+        '''
+        Call out to a given enpoint based on the call_type.
+
+        If call_type is not set then the default endpoint is selcted.
+        Otherwise resolutions is called if selected.
+        As a fail safe the un-implemented selections the
+        function will throw a ValueError if it can't parse the
+        call_type.
+
+        Returns the reponse if it determines it is valid
+        '''
+        limit_str = str(limit)
+        if call_type is None:
+            raise ValueError("Call type cannot be none")
+        if call_type == "ip":
+            call_type = ""
+            limit_str = ""
+        else:
+            call_type = f"/{call_type}"
+            limit_str = f"?limit={limit_str}"
+        endpoint = "".join([
+            self._root_endpoint,
+            self._ip_endpoint,
+            str(self.ip),
+            call_type,
+            limit_str,
+        ])
+        async with aiohttp.ClientSession(headers=self._session_headers) as session:
+            async with session.get(endpoint) as response:
+                code = response.status
+                if code == 200:
+                    return await response.json()
+                elif code == 204:
+                    raise ValueError("Virustotal rate limit reached!")
+                else:
+                    text = await response.text()
+                    raise ValueError(f"Server reply: {code} Message: {text}")
+
+    def _parse_ip(self, base: requests.Response) -> Dict[str, str]:
+        '''
+        Parses the raw response body and converts it into a human
+        readable format.
+
+        In the event the ip is found to be worth further investigation
+        will call out for realted site information and append to the
+        report data.
+        ✅
+        ❌
+        ❓
+        '''
+        report = {}
+        json_message = base
+        data = json_message.get("data")
+        attributes = data.get("attributes")
+        owner = attributes.get("as_owner")
+        owner = "[Owner] {0}".format(owner)
+
+        header = "\t[Virus Total]\n"
+        checked = "[Unknown] ✅"
+        stats = ""
+        analysis_json = attributes.get("last_analysis_stats")
+
+        for key in analysis_json.keys():
+            value = analysis_json.get(key)
+            stats += f"[{key}] {value}\n"
+            if key == "malicious" and int(value) > 0:
+                checked = "[malicious] ❌"
+            elif key == "suspicious" and int(value) > 0:
+                checked = "[suspicious] ❓"
+
+        analysis_json = attributes.get("last_analysis_results")
+        for key in analysis_json.keys():
+            agency = analysis_json.get(key)
+            result = agency.get("result")
+            if result != "clean" and result != "unrated":
+                report[(f"{key}")] = agency
+        return {
+            "header": header,
+            "checked": checked,
+            "owner": owner,
+            "stats": stats,
+            "report": json.dumps(report)
+        }
+
+    def _parse_resolutions(self, response: requests.Response) -> List[str]:
+        # get relations data
+        sites = []
+        relations_response = response
+        data = relations_response.get("data")
+        for site_data in data:
+            attributes = site_data.get("attributes")
+            host = attributes.get("host_name")
+            sites.append(host)
+        return sites
+
+'''
+            ================
+                  OTX
+            ================
+'''
+
+
+class OTX_Collector(Collector):
+    '''
+    Defines the collector for the OTX api.
+    Relevent endpoints:
+    https://otx.alienvault.com/api/v1/indicators/IPv4/{ip}/{section}
+    Where ip is the ip and section is the kind
+    of data to query for. i.e. "general", "reputation", or "url_list"
+    '''
+    def __init__(self, ip: str=None) -> None:
+        super(OTX_Collector, self).__init__(ip)
+        self._session = requests.Session()
+        self._session_headers: dict = {'X-OTX-API-KEY': OTX_KEY}
+        self._header: Optional[str] = None
+        self._report: Optional[str] = None
+        self._general: Optional[Dict[Any, Any]] = None
+        self._reputation: Optional[Dict[Any, Any]] = None
+        self._url_list: Optional[List[str]] = None
+        self._endpoint = "https://otx.alienvault.com/api/v1/indicators/IPv4/"
+
+    async def header(self) -> Optional[str]:
+        if self._header is None:
+            await self._call_and_parse_all()
+        return self._header
+
+    async def report(self) -> Optional[str]:
+        if self._report is None:
+            await self._call_and_parse_all()
+        return self._report
+
+    async def _call_and_parse_all(self) -> None:
+        # call everything and parse individually
+        general = await self._call(call_type="general")
+        self._general = self._parse_general(general)
+        reputation = await self._call(call_type="reputation")
+        self._reputation = self._parse_reputation(reputation)
+
+        url_list = await self._call(call_type="url_list")
+        self._url_list = self._parse_urls(url_list)
+        # convert into human readable
+        if self._general is None:
+            raise ValueError(
+                f"request response body cannot be None type!"
+            )
+        self._header = "".join([
+            "\n\t[OTX]\n\n",
+            "[asn]: ",
+            str(self._general.get("asn")),
+            "\n[Country]: ",
+            str(self._general.get("country_name")),
+            "\n[City]: ",
+            str(self._general.get("city")),
+            "\n[Threat Level]: ",
+            str(self._general.get("threat_score")),
+            "\n[Type]: ",
+            str(self._general.get("type_of_activities")),
+        ])
+        report = {
+            "last_seen": self._reputation.get("last_seen"),
+            "type_of_activities": self._reputation.get("type_of_activities"),
+            "domains": self._url_list
+        }
+        self._report = json.dumps(
+            report,
+            indent=4,
+            sort_keys=True
+        )
+
+    async def _call(self, call_type: str=None) -> requests.Response:
+        '''
+        Call out to a given enpoint based on the call_type.
+        provides a response if possible
+        '''
+        if call_type is None:
+            raise ValueError("Invalid call type {call_type}")
+
+        endpoint = f"{self._endpoint}/{self.ip}/{call_type}"
+        async with aiohttp.ClientSession(headers=self._session_headers) as session:
+            async with session.get(endpoint) as response:
+                code = response.status
+                if code == 200:
+                    return await response.json()
+                elif code == 204:
+                    raise ValueError("OTX rate limit reached!")
+                else:
+                    text = await response.text()
+                    raise ValueError(f"Server reply: {code} Message: {text}")
+
+    def _parse_general(self, response: requests.Response) -> Dict[str, Any]:
+        json = response
+        asn = json.get("asn")
+        country_name = json.get("country_name")
+        city = json.get("city")
+        return {
+            "asn": asn,
+            "country_name": country_name,
+            "city": city,
+        }
+
+    def _parse_reputation(self, response: requests.Response) -> Dict[str, Any]:
+        json = response
+        reputation = json.get("reputation")
+        threat_score = None
+        type_of_activities = None
+        last_seen = None
+        domains = None
+        if reputation is not None:
+            threat_score = reputation.get("threat_score")
+            type_of_activities = list(reputation.get("counts").keys())
+            last_seen = reputation.get("last_seen")
+            domains = reputation.get("domains")
+        return {
+            "threat_score": threat_score,
+            "type_of_activities": type_of_activities,
+            "last_seen": last_seen,
+            "domains": domains
+        }
+
+    def _parse_urls(self, response: requests.Response) -> List[str]:
+        json = response
+        urls = json.get("url_list")
+        url_list = []
+        domain = ""
+        for url in urls:
+            domain = url.get("domain")
+            if domain != "" and domain is not None:
+                url_list.append(domain)
+        return url_list
+
+'''
+        =================
+        Robtext Collector
+        =================
 '''
 
 
@@ -187,7 +473,28 @@ class Robtex_Collector(Collector):
                     text = await response.json()
                     raise ValueError(f"Server reply: {code} Message: {text}")
 
-async def main(ip="8.8.8.8"):
+
+async def otx(ip="8.8.8.8"):
+    '''
+    A basic test for the async stuff
+    '''
+    collector = OTX_Collector(ip)
+    header = await collector.header()
+    report = await collector.report()
+    print(f"[*] header: {header}")
+    print(f"[*] report: {report}")
+
+async def vt(ip="8.8.8.8"):
+    '''
+    A basic test for the async stuff
+    '''
+    collector = Virus_Total_Collector(ip)
+    header = await collector.header()
+    report = await collector.report()
+    print(f"[*] header: {header}")
+    print(f"[*] report: {report}")
+
+async def rob(ip="8.8.8.8"):
     '''
     A basic test for the async stuff
     '''
@@ -197,7 +504,18 @@ async def main(ip="8.8.8.8"):
     print(f"[*] header: {header}")
     print(f"[*] report: {report}")
 
+async def main(ip="8.8.8.8"):
+    await asyncio.gather(vt(ip), rob(ip), otx(ip))
+
+def main_loop():
+    ip = "8.8.8.8"
+    event_loop = asyncio.get_event_loop()
+    event_loop.run_until_complete(main(ip))
+
 if __name__ == "__main__":
+    cProfile.run("main_loop()")
+
+    '''
     start = time.time()
     ip = "8.8.8.8"
     event_loop = asyncio.get_event_loop()
@@ -205,4 +523,4 @@ if __name__ == "__main__":
     end = time.time()
     diff = end - start
     print(f"[*] Total time: {diff}")
-
+    '''
