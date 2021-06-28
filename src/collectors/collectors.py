@@ -9,6 +9,8 @@ import os
 Author: Taylor Cochran
 '''
 
+import time
+
 #            ================================
 #                   Table of Contents
 #            ================================
@@ -28,11 +30,13 @@ Author: Taylor Cochran
             ================
 '''
 
-# VIRUS_TOTAL_KEY = os.environ["VT_KEY"]
-# OTX_KEY = os.environ["OTX_KEY"]
+VIRUS_TOTAL_KEY = os.environ["VT_KEY"]
+OTX_KEY = os.environ["OTX_KEY"]
+'''
 CONF = config.Config()
 VIRUS_TOTAL_KEY = CONF.virus_total_key
 OTX_KEY = CONF.otx_key
+'''
 
 '''
             ================
@@ -457,3 +461,19 @@ class Robtex_Collector(Collector):
             raise ValueError(
                 "Server reply: {0} Message: {1}".
                 format(code, response.text))
+
+def main(ip="8.8.8.8"):
+    '''
+    A basic test for the async stuff
+    '''
+    collector = Robtex_Collector(ip)
+    data = collector._call()
+    print(f"[*] data: {data}")
+
+if __name__ == "__main__":
+    start = time.time()
+    ip = "8.8.8.8"
+    main()
+    end = time.time()
+    diff = end - start
+    print(f"[*] Total time: {diff}")

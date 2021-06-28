@@ -10,6 +10,8 @@ import os
 import aiohttp
 import asyncio
 
+import time
+
 '''
 Author: Taylor Cochran
 '''
@@ -33,8 +35,8 @@ Author: Taylor Cochran
             ================
 '''
 
-# VIRUS_TOTAL_KEY = os.environ["VT_KEY"]
-# OTX_KEY = os.environ["OTX_KEY"]
+VIRUS_TOTAL_KEY = os.environ["VT_KEY"]
+OTX_KEY = os.environ["OTX_KEY"]
 '''
 CONF = config.Config()
 VIRUS_TOTAL_KEY = CONF.virus_total_key
@@ -122,20 +124,20 @@ class Robtex_Collector(Collector):
         self._session = requests.Session()
         self._header: Optional[str] = None
         self._report: Optional[str] = None
-        self._endpoint: str = "https://freeapi.robtex.com/"
+        self._endpoint: str = "https://freeapi.robtex.com"
 
-    def header(self) -> Optional[str]:
+    async def header(self) -> Optional[str]:
         if self._header is None:
-            self._call_and_parse_all()
+            await self._call_and_parse_all()
         return self._header
 
-    def report(self) -> Optional[str]:
+    async def report(self) -> Optional[str]:
         if self._report is None:
-            self._call_and_parse_all()
+            await self._call_and_parse_all()
         return self._report
 
-    def _call_and_parse_all(self) -> None:
-        call_dict = self._call().json()
+    async def _call_and_parse_all(self) -> None:
+        call_dict = await self._call()
         self._header = "".join([
             "\n\n\t[Robtex]\n\n[asname]: ",
             str(call_dict.get("asname")),
@@ -156,7 +158,7 @@ class Robtex_Collector(Collector):
             "activeDNS": call_dict.get("act")
         }, indent=4, sort_keys=True)
 
-    async def _call(self, call_type: str="ip") -> requests.Response:
+    async def _call(self, call_type: str="ip") -> aiohttp.ClientResponse:
         '''
         Calls out to the robtext end point
         https://freeapi.robtex.com/ipquery/{ip}
@@ -165,38 +167,42 @@ class Robtex_Collector(Collector):
         '''
         if call_type is None:
             raise ValueError(f"Invalid call type {call_type}")
+        endpoint = ""
         if call_type == "ip":
-            endpoint = "{0}/ipquery/{1}".format(endpoint, self.ip)
-        response = self._session.get(endpoint)
-        code = response.status_code
-        if code == 200:
-                return response
-        elif code == 204:
-            raise ValueError("OTX rate limit reached!")
-        else:
-            raise ValueError(
-                "Server reply: {0} Message: {1}".
-                format(code, response.text))
+            endpoint = "".join([
+                self._endpoint,
+                "/ipquery/",
+                str(self.ip)
+            ])
+            print(endpoint)
 
-async def main(url="https://python.org"):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(endpoint) as response:
+                code = response.status
+                if code == 200:
+                        return await response.json()
+                elif code == 204:
+                    raise ValueError("OTX rate limit reached!")
+                else:
+                    text = await response.json()
+                    raise ValueError(f"Server reply: {code} Message: {text}")
+
+async def main(ip="8.8.8.8"):
     '''
     A basic test for the async stuff
     '''
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as request:
-            print(f"Status: {request.status}")
-            print(f"Type: {request.headers['content-type']}")
-            snip = await request.text()
-            snip = snip[:100]
-            print(f"Body: {snip}")
+    collector = Robtex_Collector(ip)
+    header = await collector.header()
+    report = await collector.report()
+    print(f"[*] header: {header}")
+    print(f"[*] report: {report}")
 
 if __name__ == "__main__":
+    start = time.time()
     ip = "8.8.8.8"
-    rob_tex_url = "".join([
-        "https://freeapi.robtex.com/",
-        "ipquery/",
-        ip
-    ])
     event_loop = asyncio.get_event_loop()
-    event_loop.run_until_complete(main(rob_tex_url))
+    event_loop.run_until_complete(main(ip))
+    end = time.time()
+    diff = end - start
+    print(f"[*] Total time: {diff}")
 
