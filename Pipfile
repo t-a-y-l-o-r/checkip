@@ -40,6 +40,8 @@ wrapt = "==1.12.1"
 xmlformatter = "==0.1.1"
 zipp = "==3.4.0"
 Pygments = "==2.7.3"
+aiohttp = {extras = ["speedups"], version = "*"}
+config = "*"
 
 [dev-packages]
 
