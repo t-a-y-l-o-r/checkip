@@ -460,7 +460,6 @@ class Robtex_Collector(Collector):
                 "/ipquery/",
                 str(self.ip)
             ])
-            print(endpoint)
 
         async with aiohttp.ClientSession() as session:
             async with session.get(endpoint) as response:
@@ -504,8 +503,27 @@ async def rob(ip="8.8.8.8"):
     print(f"[*] header: {header}")
     print(f"[*] report: {report}")
 
+#TODO: finish this
+async def report_on(collector, ip):
+    collector.ip = ip
+    return asyncio.Task(collector.header, collector.report)
+
 async def main(ip="8.8.8.8"):
-    await asyncio.gather(vt(ip), rob(ip), otx(ip))
+    factory = Collector_Factory()
+    collectors = [factory.of(collector) for collector in Collector_Types]
+    # report_funcs = [await report_on(collector, ip) for collector in collectors]
+    report_funcs = []
+    for collector in collectors:
+        collector.ip = ip
+        report_funcs.append(collector.header())
+        report_funcs.append(collector.report())
+
+    await asyncio.gather(*report_funcs)
+    for collector in collectors:
+        header = await collector.header()
+        report = await collector.report()
+        print(f"[*] header: {header}")
+        print(f"[*] report: {report}")
 
 def main_loop():
     ip = "8.8.8.8"
@@ -513,9 +531,8 @@ def main_loop():
     event_loop.run_until_complete(main(ip))
 
 if __name__ == "__main__":
-    cProfile.run("main_loop()")
+    # cProfile.run("main_loop()")
 
-    '''
     start = time.time()
     ip = "8.8.8.8"
     event_loop = asyncio.get_event_loop()
@@ -523,4 +540,3 @@ if __name__ == "__main__":
     end = time.time()
     diff = end - start
     print(f"[*] Total time: {diff}")
-    '''
