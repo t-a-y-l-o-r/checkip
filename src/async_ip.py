@@ -126,21 +126,38 @@ class IP_Checker():
             self.report.create_record()
 
         # check if forcing all ips or not
-        actual_ips = None
+        add_to_record = None
+        ips_to_scan = None
         if self.ui.force:
-            actual_ips = self.filter_record_ips(
+            add_to_record = self.filter_record_ips(
                 self.ips,
                 record_ips,
                 display=False
             )
-            self.main_loop(self.ips, self.collectors)
+            ips_to_scan = self.ips
         else:
-            actual_ips = self.filter_record_ips(self.ips, record_ips)
-            self.main_loop(actual_ips.keys(), self.collectors)
+            add_to_record = self.filter_record_ips(self.ips, record_ips)
+            ips_to_scan = add_to_record.keys()
+
+        full_report = self.run_collector_pipeline(ips_to_scan, self.collectors)
+        self.display_full_report(full_report)
 
         logger.info("Recording ips")
         # merge dicts and record
-        self.record_ips({**actual_ips, **record_ips})
+        self.record_ips({**add_to_record, **record_ips})
+
+    def display_full_report(self, full_report):
+
+        for ip in full_report.keys():
+            report_lists = full_report[ip]
+            for pair in report_lists:
+                header = pair[0]
+                report = pair[1]
+                # print(f"header: {header}")
+                # print(f"report: {report}")
+                self.ui.display(header, ip)
+                ip = None
+
 
 
 #   ========================================================================
@@ -187,26 +204,44 @@ class IP_Checker():
 #                       Collector Process Stuff
 #   ========================================================================
 
-    def main_loop(self, ips_list, collectors):
+    def run_collector_pipeline(self, ips_list, collectors):
+        logger.info("Building tasks")
+        full_report = {}
         for ip in ips_list:
+            '''
             event_loop = asyncio.get_event_loop()
             event_loop.run_until_complete(
-                self.async_pipeline(ip, collectors)
+                self.run_all_collectors(ip, collectors)
             )
+            '''
+            all_reports = asyncio.run(
+                self.run_all_collectors(ip, collectors)
+            )
+            full_report[ip] = all_reports
 
-    async def async_pipeline(self, ip, collectors):
+        return full_report
+
+    async def run_all_collectors(self, ip, collectors):
         report_funcs = []
         for collector in collectors:
             collector.ip = ip
             report_funcs.append(collector.header())
             report_funcs.append(collector.report())
 
-        await asyncio.gather(*report_funcs)
+        await asyncio.gather(*report_funcs, return_exceptions=True)
+
+        header_report_pairs = []
         for collector in collectors:
-            header = await collector.header()
-            report = await collector.report()
-            print(f"[*] header: {header}")
-            print(f"[*] report: {report}")
+            try:
+                header = await collector.header()
+                report = await collector.report()
+                header_report_pairs.append((header, report))
+            except ValueError as e:
+                header = f"Collector {collector} errored out"
+                report = f"error message: {e}"
+                header_report_pairs.append((header, report))
+
+        return header_report_pairs
 
 
 if __name__ == "__main__":

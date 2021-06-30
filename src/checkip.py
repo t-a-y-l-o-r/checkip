@@ -344,4 +344,4 @@ if __name__ == "__main__":
     #cProfile.run("IP_Checker().main()")
     # hotfix for macos bug
     multiprocessing.set_start_method("fork")
-    cProfile.run("IP_Checker().main()")
+    IP_Checker().main()
