@@ -243,9 +243,5 @@ class IP_Checker():
 if __name__ == "__main__":
     # cProfile.run("main_loop()")
 
-    start = time.time()
     checker = IP_Checker()
     checker.main()
-    end = time.time()
-    diff = end - start
-    print(f"[*] Total time: {diff}")
