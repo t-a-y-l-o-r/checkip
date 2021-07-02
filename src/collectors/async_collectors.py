@@ -1,4 +1,4 @@
-from typing import Type, Optional, Dict, List, Any
+from typing import Type, Optional, Dict, List, Any, Tuple
 from abc import ABC, abstractmethod
 from enum import Enum, unique
 import requests
@@ -133,11 +133,13 @@ class Virus_Total_Collector(Collector):
     async def header(self) -> Optional[str]:
         if self._header is None:
             await self._call_and_parse_all()
+        assert self._header is not None
         return self._header
 
     async def report(self) -> Optional[str]:
         if self._report is None:
             await self._call_and_parse_all()
+        assert self._report is not None
         return self._report
 
     async def _call_and_parse_all(self) -> None:
@@ -284,11 +286,13 @@ class OTX_Collector(Collector):
     async def header(self) -> Optional[str]:
         if self._header is None:
             await self._call_and_parse_all()
+        assert self._header is not None
         return self._header
 
     async def report(self) -> Optional[str]:
         if self._report is None:
             await self._call_and_parse_all()
+        assert self._header is not None
         return self._report
 
     async def _call_and_parse_all(self) -> None:
@@ -415,16 +419,38 @@ class Robtex_Collector(Collector):
     async def header(self) -> Optional[str]:
         if self._header is None:
             await self._call_and_parse_all()
+        assert self._header is not None
         return self._header
 
     async def report(self) -> Optional[str]:
         if self._report is None:
             await self._call_and_parse_all()
+        assert self._report is not None
         return self._report
 
     async def _call_and_parse_all(self) -> None:
-        call_dict = await self._call()
-        self._header = "".join([
+        call_dict = None
+        try:
+            call_dict = await self._call()
+        except ValueError as e:
+            call_dict = None
+
+        if call_dict is None:
+            self._header, self._report = self._build_rate_limit_header()
+        else:
+            self._header, self._report = self._build_safe_report(call_dict)
+
+    def _build_rate_limit_header(self) -> str:
+        header = "".join([
+            "\n\n\t[Robtex]\n\n",
+            "[ERROR]: Rate limit reached\n\n",
+        ])
+        report = {"ERROR": "rate limit reached"}
+        return header, report
+
+    def _build_safe_report(self, call_dict: dict) -> Tuple[dict, dict]:
+        assert call_dict is not None
+        header = "".join([
             "\n\n\t[Robtex]\n\n[asname]: ",
             str(call_dict.get("asname")),
             "\n[whois]: ",
@@ -439,10 +465,15 @@ class Robtex_Collector(Collector):
             str(call_dict.get("city")),
             "\n"
         ])
-        self._report = json.dumps({
-            "passiveDNS" : call_dict.get("pas"),
-            "activeDNS": call_dict.get("act")
-        }, indent=4, sort_keys=True)
+        report = json.dumps(
+            {
+                "passiveDNS" : call_dict.get("pas"),
+                "activeDNS": call_dict.get("act")
+            },
+            indent=4,
+            sort_keys=True
+        )
+        return header, report
 
     async def _call(self, call_type: str="ip") -> aiohttp.ClientResponse:
         '''
@@ -466,77 +497,9 @@ class Robtex_Collector(Collector):
                 code = response.status
                 if code == 200:
                         return await response.json()
-                elif code == 204:
-                    raise ValueError("OTX rate limit reached!")
+                elif code == 429:
+                    raise ValueError("Robtex rate limit reached!")
                 else:
                     text = await response.json()
-                    raise ValueError(f"Server reply: {code} Message: {text}")
+                    raise IOError(f"Server reply: {code} Message: {text}")
 
-
-async def otx(ip="8.8.8.8"):
-    '''
-    A basic test for the async stuff
-    '''
-    collector = OTX_Collector(ip)
-    header = await collector.header()
-    report = await collector.report()
-    print(f"[*] header: {header}")
-    print(f"[*] report: {report}")
-
-async def vt(ip="8.8.8.8"):
-    '''
-    A basic test for the async stuff
-    '''
-    collector = Virus_Total_Collector(ip)
-    header = await collector.header()
-    report = await collector.report()
-    print(f"[*] header: {header}")
-    print(f"[*] report: {report}")
-
-async def rob(ip="8.8.8.8"):
-    '''
-    A basic test for the async stuff
-    '''
-    collector = Robtex_Collector(ip)
-    header = await collector.header()
-    report = await collector.report()
-    print(f"[*] header: {header}")
-    print(f"[*] report: {report}")
-
-#TODO: finish this
-async def report_on(collector, ip):
-    collector.ip = ip
-    return asyncio.Task(collector.header, collector.report)
-
-async def main(ip="8.8.8.8"):
-    factory = Collector_Factory()
-    collectors = [factory.of(collector) for collector in Collector_Types]
-    # report_funcs = [await report_on(collector, ip) for collector in collectors]
-    report_funcs = []
-    for collector in collectors:
-        collector.ip = ip
-        report_funcs.append(collector.header())
-        report_funcs.append(collector.report())
-
-    await asyncio.gather(*report_funcs)
-    for collector in collectors:
-        header = await collector.header()
-        report = await collector.report()
-        print(f"[*] header: {header}")
-        print(f"[*] report: {report}")
-
-def main_loop():
-    ip = "8.8.8.8"
-    event_loop = asyncio.get_event_loop()
-    event_loop.run_until_complete(main(ip))
-
-if __name__ == "__main__":
-    # cProfile.run("main_loop()")
-
-    start = time.time()
-    ip = "8.8.8.8"
-    event_loop = asyncio.get_event_loop()
-    event_loop.run_until_complete(main(ip))
-    end = time.time()
-    diff = end - start
-    print(f"[*] Total time: {diff}")

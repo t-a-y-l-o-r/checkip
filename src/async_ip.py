@@ -143,6 +143,8 @@ class IP_Checker():
         self.display_full_report(full_report)
 
         logger.info("Recording ips")
+        writable_report = json.dumps(full_report, indent=4)
+        self.report.write_report(writable_report)
         # merge dicts and record
         self.record_ips({**add_to_record, **record_ips})
 
@@ -208,12 +210,6 @@ class IP_Checker():
         logger.info("Building tasks")
         full_report = {}
         for ip in ips_list:
-            '''
-            event_loop = asyncio.get_event_loop()
-            event_loop.run_until_complete(
-                self.run_all_collectors(ip, collectors)
-            )
-            '''
             all_reports = asyncio.run(
                 self.run_all_collectors(ip, collectors)
             )
