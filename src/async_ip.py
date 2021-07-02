@@ -233,6 +233,7 @@ class IP_Checker():
                 report = await collector.report()
                 header_report_pairs.append((header, report))
             except ValueError as e:
+                logger.exception(e)
                 header = f"Collector {collector} errored out"
                 report = f"error message: {e}"
                 header_report_pairs.append((header, report))
