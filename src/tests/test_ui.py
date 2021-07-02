@@ -179,7 +179,6 @@ def test_ip_from_host_failure() -> None:
         "google///.com",
         "nmap.comasdasldjnhasd",
         "asdhajlsdnljsagithub.com",
-        "htttp://gitlab.com.com.com.com"
     ]
     for host in host_list:
         conf = ui.UI_Config(

@@ -36,13 +36,9 @@ Author: Taylor Cochran
             ================
 '''
 
-VIRUS_TOTAL_KEY = os.environ["VT_KEY"]
-OTX_KEY = os.environ["OTX_KEY"]
-'''
 CONF = config.Config()
 VIRUS_TOTAL_KEY = CONF.virus_total_key
 OTX_KEY = CONF.otx_key
-'''
 
 '''
             ================
