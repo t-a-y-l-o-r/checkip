@@ -97,11 +97,7 @@ class Collector(ABC):
         self.ip = ip
 
     @abstractmethod
-    def header(self) -> Union[Coroutine[Any, Any, Any], str]:
-        pass
-
-    @abstractmethod
-    def report(self) -> Union[Coroutine[Any, Any, Any], str]:
+    def report(self) -> Union[Coroutine[Any, Any, Any], dict]:
         pass
 
 '''
@@ -110,6 +106,12 @@ class Collector(ABC):
             ================
 '''
 
+class VT_Status_Types(Enum):
+    harmless = "harmless"
+    malicious = "malicious"
+    suspiscious = "suspiscious"
+    undetected = "undetected"
+    timeout = "timeout"
 
 class Virus_Total_Collector(Collector):
     '''
@@ -122,12 +124,23 @@ class Virus_Total_Collector(Collector):
     '''
     def __init__(self, ip=None) -> None:
         super(Virus_Total_Collector, self).__init__(ip)
-        self._session = requests.Session()
+
         self._session_headers: dict = {'x-apikey': VIRUS_TOTAL_KEY}
+
         self._header: Optional[str] = None
         self._report: Optional[str] = None
+
         self._root_endpoint: str = 'https://www.virustotal.com/'
         self._ip_endpoint: str = 'api/v3/ip_addresses/'
+
+        self._analysis_types = VT_Status_Types
+        self._analysis_symbols = {
+            self._analysis_types.harmless.value: "✅",
+            self._analysis_types.malicious.value: "❌",
+            self._analysis_types.suspiscious.value: "❌",
+            self._analysis_types.undetected.value: "❓",
+            self._analysis_types.timeout.value: "❓",
+        }
 
     async def header(self) -> Union[Coroutine[Any, Any, Any], str]:
         if self._header is None:
@@ -147,6 +160,8 @@ class Virus_Total_Collector(Collector):
         response = await self._call("resolutions")
         sites = self._parse_resolutions(response)
 
+        self._header = parsed_dict
+        '''
         self._header = "".join([
             parsed_dict["header"],
             "\n",
@@ -156,6 +171,7 @@ class Virus_Total_Collector(Collector):
             "\n",
             parsed_dict["stats"]
         ])
+        '''
         report = json.loads(parsed_dict["report"])
         report["sites"] = sites
         self._report = json.dumps(report, sort_keys=True, indent=4)
@@ -199,7 +215,7 @@ class Virus_Total_Collector(Collector):
                     text = await response.text()
                     raise ValueError(f"Server reply: {code} Message: {text}")
 
-    def _parse_ip(self, base: dict) -> Dict[str, str]:
+    def _parse_ip(self, json_message: dict) -> Dict[str, str]:
         '''
         Parses the raw response body and converts it into a human
         readable format.
@@ -212,26 +228,19 @@ class Virus_Total_Collector(Collector):
         ❓
         '''
         report = {}
-        json_message = base
-        data = json_message.get("data")
-        assert data is not None
-        attributes = data.get("attributes")
-        assert attributes is not None
-        owner = attributes.get("as_owner")
-        owner = "[Owner] {0}".format(owner)
+        data = json_message["data"]
+        attributes = data["attributes"]
+        owner = attributes["as_owner"]
+
+        owner = f"[Owner] {owner}"
 
         header = "\t[Virus Total]\n"
         checked = "[Unknown] ✅"
-        stats = ""
+
         analysis_json = attributes.get("last_analysis_stats")
 
-        for key in analysis_json.keys():
-            value = analysis_json.get(key)
-            stats += f"[{key}] {value}\n"
-            if key == "malicious" and int(value) > 0:
-                checked = "[malicious] ❌"
-            elif key == "suspicious" and int(value) > 0:
-                checked = "[suspicious] ❓"
+        stats = self._build_last_analysis_stats(analysis_json)
+        checked = self._determine_overall_status(stats)
 
         analysis_json = attributes.get("last_analysis_results")
         for key in analysis_json.keys():
@@ -246,6 +255,35 @@ class Virus_Total_Collector(Collector):
             "stats": stats,
             "report": json.dumps(report)
         }
+
+    def _determine_overall_status(self, stats: dict) -> str:
+        has_most = self._analysis_types.harmless.value
+        most = 0
+
+        for stat_type in stats.keys():
+            count = stats[stat_type]
+            if count > most:
+                most = count
+                has_most = stat_type
+
+        symbol = self._analysis_symbols[has_most]
+        overall_status = f"{has_most} {symbol}"
+        return overall_status
+
+
+    def _build_last_analysis_stats(self, analysis_json: dict) -> dict:
+
+        stats = dict()
+        for result in self._analysis_types:
+            stats[result.value] = 0
+
+        for scan in analysis_json.keys():
+            result = analysis_json.get(scan)
+            stats.setdefault(scan, 0)
+            stats[scan] += result
+
+        return stats
+
 
     def _parse_resolutions(self, response: dict) -> List[str]:
         # get relations data
