@@ -58,7 +58,7 @@ OTX_KEY = CONF.otx_key
 @unique
 class Collector_Types(Enum):
     VIRUS_TOTAL = "Virus_Total_Collector"
-    OTX = "OTX_COllector"
+    OTX = "OTX_Collector"
     ROBTEX = "Robtex_Collector"
 
 '''

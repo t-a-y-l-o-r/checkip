@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from collectors.async_collectors import Collector, Collector_Types, Collector_Factory
+from collectors.collectors import Collector, Collector_Types, Collector_Factory
 from typing import Any, Dict, KeysView, List, Tuple
 import multiprocessing as multi
 from report import report
