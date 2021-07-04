@@ -57,9 +57,9 @@ OTX_KEY = CONF.otx_key
 
 @unique
 class Collector_Types(Enum):
-    VIRUS_TOTAL = 1
-    OTX = 2
-    ROBTEX = 3
+    VIRUS_TOTAL = "Virus_Total_Collector"
+    OTX = "OTX_COllector"
+    ROBTEX = "Robtex_Collector"
 
 '''
             ================
@@ -79,14 +79,8 @@ class Collector_Factory(Abstract_Collector_Factory):
     Concrete factory for the collectors defined within this module
     '''
     def of(self, typeOf: Collector_Types, ip: str=None) -> "Collector":
-        if typeOf == Collector_Types.VIRUS_TOTAL:
-            return Virus_Total_Collector(ip=ip)
-        elif typeOf == Collector_Types.OTX:
-            return OTX_Collector(ip=ip)
-        elif typeOf == Collector_Types.ROBTEX:
-            return Robtex_Collector(ip=ip)
-        else:
-            raise TypeError(f"Unknown collector type of {type(typeOf)}")
+        assert typeOf in Collector_Types
+        return globals()[typeOf.value](ip)
 
 '''
             ================
@@ -512,4 +506,3 @@ class Robtex_Collector(Collector):
                 else:
                     text = await response.json()
                     raise IOError(f"Server reply: {code} Message: {text}")
-
