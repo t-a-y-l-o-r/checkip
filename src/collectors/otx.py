@@ -1,20 +1,15 @@
 from typing import (
-    Type,
     Optional,
     Dict,
     List,
     Any,
-    Tuple,
     Coroutine,
     Union
 )
-from abc import ABC, abstractmethod
-from enum import Enum, unique
 import json
 
 # async stuff
 import aiohttp
-import asyncio
 
 from .collectors import Collector
 

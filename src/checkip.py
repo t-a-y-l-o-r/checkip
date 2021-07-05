@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
-from collectors import Collector, Collector_Types, Collector_Factory
-from typing import Any, Dict, KeysView, List, Tuple
-import multiprocessing as multi
+from collectors import Collector_Types, Collector_Factory
+from typing import Any, Dict
 from report import report
 from reader import reader
-from io import StringIO
-import multiprocessing
 from ui import ui
-import traceback
-import cProfile
 import logging
+import asyncio
 import json
 import sys
 
-import time
-import asyncio
 
 '''
 A set of python tools used to generate securirty reports on flagged ips.
@@ -241,6 +235,7 @@ class IP_Checker():
 
 
 if __name__ == "__main__":
+    # import cProfile
     # cProfile.run("main_loop()")
 
     checker = IP_Checker()

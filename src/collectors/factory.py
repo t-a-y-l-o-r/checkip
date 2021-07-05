@@ -5,9 +5,9 @@ import config
 
 from .collectors import Collector
 
-from .virus_total import Virus_Total_Collector
-from .otx import OTX_Collector
-from .robtex import Robtex_Collector
+from .virus_total import Virus_Total_Collector # noqa: F401
+from .otx import OTX_Collector # noqa: F401
+from .robtex import Robtex_Collector # noqa: F401
 
 
 

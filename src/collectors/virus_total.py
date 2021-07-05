@@ -1,20 +1,13 @@
 from typing import (
-    Type,
     Optional,
     Dict,
     List,
     Any,
-    Tuple,
     Coroutine,
     Union
 )
-from abc import ABC, abstractmethod
 from enum import Enum, unique
-import json
-
-# async stuff
 import aiohttp
-import asyncio
 
 from .collectors import Collector
 '''
@@ -23,6 +16,7 @@ from .collectors import Collector
             ================
 '''
 
+@unique
 class VT_Status_Types(Enum):
     harmless = "harmless"
     malicious = "malicious"
@@ -45,7 +39,7 @@ class Virus_Total_Collector(Collector):
         self._session_headers: dict = {'x-apikey': self.key}
 
         self._header: Any = None
-        self._report: Optional[str] = None
+        self._report: Optional[dict] = None
 
         self._root_endpoint: str = 'https://www.virustotal.com/'
         self._ip_endpoint: str = 'api/v3/ip_addresses/'
@@ -67,7 +61,7 @@ class Virus_Total_Collector(Collector):
         return self._header
 
 
-    async def report(self) -> Union[Coroutine[Any, Any, Any], str]:
+    async def report(self) -> Union[Coroutine[Any, Any, Any], dict]:
         if self._report is None:
             await self._call_and_parse_all()
         assert self._report is not None
