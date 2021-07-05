@@ -80,11 +80,11 @@ class Virus_Total_Collector(Collector):
         response = await self._call("resolutions")
         sites = self._parse_resolutions(response)
 
-        self._header = parsed_dict
-
-        report = parsed_dict["report"]
-        report["sites"] = sites
-        self._report = json.dumps(report, sort_keys=True, indent=4)
+        parsed_dict["additional_information"] = {
+            "sites": sites
+        }
+        self._header = parsed_dict["header"]
+        self._report = parsed_dict
 
 
     async def _call(self, call_type: str="ip", limit: int=20) -> dict:
@@ -150,14 +150,18 @@ class Virus_Total_Collector(Collector):
         checked = self._determine_overall_status(stats)
 
         analysis_json = attributes.get("last_analysis_results")
-        report = self._last_results(analysis_json)
+        additional_info = self._last_results(analysis_json)
 
-        return {
-            "header": header,
+        report = {
             "checked": checked,
             "owner": owner,
             "stats": stats,
-            "report": report
+        }
+
+        return {
+            "header": header,
+            "report": report,
+            "additional_information": additional_info
         }
 
 

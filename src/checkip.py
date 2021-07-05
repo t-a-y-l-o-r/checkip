@@ -156,6 +156,7 @@ class IP_Checker():
                 header = pair[0]
                 report = pair[1]
                 self.ui.display(header, ip)
+                self.ui.display(report)
                 ip = None
 
 
