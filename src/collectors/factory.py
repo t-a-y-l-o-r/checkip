@@ -50,15 +50,15 @@ class Abstract_Collector_Factory(ABC):
     Abstract factory for the collectors defined in this module
     '''
     @abstractmethod
-    def of(self, type: Collector_Types, ip: str=None) -> "Collector":
+    def of(self, type: Collector_Types) -> "Collector":
         pass
 
 class Collector_Factory(Abstract_Collector_Factory):
     '''
     Concrete factory for the collectors defined within this module
     '''
-    def of(self, typeOf: Collector_Types, ip: str=None) -> "Collector":
+    def of(self, typeOf: Collector_Types) -> "Collector":
         assert typeOf in Collector_Types
         name = typeOf.value
         key = None if name not in KEYS else KEYS[name]
-        return globals()[typeOf.value](ip, key)
+        return globals()[typeOf.value](key)

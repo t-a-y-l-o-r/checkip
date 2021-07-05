@@ -23,8 +23,7 @@ class Collector_Parser(ABC):
 
 
 class Collector_Caller(ABC):
-    def __init__(self, ip: str, key: Optional[str]):
-        self.ip = ip
+    def __init__(self, key: Optional[str]):
         self.key = key
 
     @abstractmethod
@@ -52,12 +51,11 @@ class Collector(Collector_Core):
     All classes should override these methods
     '''
     def __init__(self, *args, **kwargs):
-        ip = args[0]
-        key = args[1]
+        key = args[0]
 
         caller = kwargs.get("caller")
         if caller:
-            self._caller = caller(ip, key)
+            self._caller = caller(key)
 
         parser = kwargs.get("parser")
         if parser:

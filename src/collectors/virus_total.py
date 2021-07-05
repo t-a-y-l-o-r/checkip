@@ -34,14 +34,14 @@ class VT_Parser(Collector_Parser):
 '''
 class VT_Caller(Collector_Caller):
     def __init__(self, *args):
-        super().__init__(args[0], args[1])
+        super().__init__(args[0])
 
         self._session_headers = {'x-apikey': self.key}
 
         self._root_endpoint: str = 'https://www.virustotal.com/'
         self._ip_endpoint: str = 'api/v3/ip_addresses/'
 
-    async def call(self, call_type: str="ip", limit: int=20) -> dict:
+    async def call(self, ip: str, call_type: str="ip", limit: int=20) -> dict:
         '''
         Call out to a given enpoint based on the call_type.
 
@@ -65,7 +65,7 @@ class VT_Caller(Collector_Caller):
         endpoint = "".join([
             self._root_endpoint,
             self._ip_endpoint,
-            str(self.ip),
+            ip,
             call_type,
             limit_str,
         ])
@@ -129,9 +129,9 @@ class Virus_Total_Collector(Collector):
 
 
     async def _call_and_parse_all(self) -> None:
-        response = await self._caller.call("ip")
+        response = await self._caller.call(self.ip, "ip")
         parsed_dict = self._parse_ip(response)
-        response = await self._caller.call("resolutions")
+        response = await self._caller.call(self.ip, "resolutions")
         sites = self._parse_resolutions(response)
 
         parsed_dict["additional_information"] = {
@@ -139,25 +139,6 @@ class Virus_Total_Collector(Collector):
         }
         self._header = parsed_dict["header"]
         self._report = parsed_dict
-
-    def _construct_endpoint(self, ip: str, call_type: VT_Call_Type, limit: int=20) -> str:
-        assert call_type in VT_Call_Type
-        self._call_type_extensions = {
-            VT_Call_Type.ip.value: "",
-            VT_Call_Type.resolutions.value: f"/{call_type.value}?limit={limit_str}"
-
-        }
-        url_extension = self._call_type_extensions[call_type.value]
-        endpoint = "".join([
-            self._root_endpoint,
-            self._ip_endpoint,
-            str(self.ip),
-            url_extension
-        ])
-
-        return endpoint
-
-
 
     def _parse_ip(self, json_message: dict) -> dict:
         '''
