@@ -28,7 +28,8 @@ class OTX_Collector(Collector):
     of data to query for. i.e. "general", "reputation", or "url_list"
     '''
     def __init__(self, ip: str=None, key=None) -> None:
-        super(OTX_Collector, self).__init__(ip, key)
+        super().__init__(ip, key)
+        self.key = key
         self._session_headers: dict = {'X-OTX-API-KEY': self.key}
         self._header: Optional[str] = None
         self._report: Optional[str] = None

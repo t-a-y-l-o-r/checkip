@@ -29,7 +29,7 @@ class Robtex_Collector(Collector):
     geo location data.
     '''
     def __init__(self, ip: str=None, key=None) -> None:
-        super(Robtex_Collector, self).__init__(ip)
+        super().__init__(ip, key)
         self._session = requests.Session()
         self._header: Optional[str] = None
         self._report: Optional[str] = None
