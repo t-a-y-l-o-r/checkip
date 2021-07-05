@@ -26,7 +26,7 @@ from .collectors import Collector
 class VT_Status_Types(Enum):
     harmless = "harmless"
     malicious = "malicious"
-    suspiscious = "suspiscious"
+    suspicious = "suspicious"
     undetected = "undetected"
     timeout = "timeout"
 
@@ -44,7 +44,7 @@ class Virus_Total_Collector(Collector):
 
         self._session_headers: dict = {'x-apikey': self.key}
 
-        self._header: Optional[str] = None
+        self._header: Any = None
         self._report: Optional[str] = None
 
         self._root_endpoint: str = 'https://www.virustotal.com/'
@@ -54,7 +54,7 @@ class Virus_Total_Collector(Collector):
         self._analysis_symbols = {
             self._analysis_types.harmless.value: "✅",
             self._analysis_types.malicious.value: "❌",
-            self._analysis_types.suspiscious.value: "❌",
+            self._analysis_types.suspicious.value: "❌",
             self._analysis_types.undetected.value: "❓",
             self._analysis_types.timeout.value: "❓",
         }
@@ -127,7 +127,7 @@ class Virus_Total_Collector(Collector):
                     raise ValueError(f"Server reply: {code} Message: {text}")
 
 
-    def _parse_ip(self, json_message: dict) -> Dict[str, str]:
+    def _parse_ip(self, json_message: dict) -> dict:
         '''
         Parses the raw response body and converts it into a human
         readable format.
@@ -170,6 +170,7 @@ class Virus_Total_Collector(Collector):
         report = {}
         for stat in analysis_json.keys():
             agency = analysis_json.get(stat)
+            assert agency is not None
             result = agency.get("result")
             if result != clean and result != unrated:
                 report[stat] = agency
@@ -179,14 +180,14 @@ class Virus_Total_Collector(Collector):
 
     def _last_stats(self, analysis_json: dict) -> dict:
 
-        stats = dict()
+        stats: Dict[Any, int] = dict()
         for result in self._analysis_types:
             stats[result.value] = 0
 
         for scan in analysis_json.keys():
-            result = analysis_json.get(scan)
-            stats.setdefault(scan, 0)
-            stats[scan] += result
+            scan_result = analysis_json.get(scan)
+            assert scan_result is not None
+            stats[scan] += scan_result
 
         return stats
 
