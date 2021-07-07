@@ -15,11 +15,12 @@ from abc import ABC, abstractmethod
 class Collector_Parser(ABC):
 
     @abstractmethod
-    def parse(self, report: dict) -> str:
+    def parse(self, report: dict) -> dict:
         '''
         Converts the given json report into a string
         '''
         pass
+
 
 
 class Collector_Caller(ABC):
@@ -27,11 +28,12 @@ class Collector_Caller(ABC):
         self.key = key
 
     @abstractmethod
-    def call(self, ip: str) -> dict:
+    async def call(self) -> dict:
         '''
         Converts the given json report into a string
         '''
         pass
+
 
 
 class Collector_Core(ABC):
@@ -51,6 +53,8 @@ class Collector(Collector_Core):
     All classes should override these methods
     '''
     def __init__(self, *args, **kwargs):
+        if len(args) < 1:
+            raise ValueError(f"Collector expected one positional arguments, and instead got: {len(args)}")
         key = args[0]
 
         caller = kwargs.get("caller")
@@ -61,8 +65,13 @@ class Collector(Collector_Core):
         if parser:
             self._parser = parser()
 
+        self._report: Optional[dict] = None
+
 
     async def report(self) -> Union[Coroutine[Any, Any, Any], dict]:
         if self._report is None:
-            self._report = await self._parser.parse(self._caller.call())
+            result = await self._caller.call()
+            self._report = self._parser.parse(result)
         return self._report
+
+
