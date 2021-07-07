@@ -62,3 +62,4 @@ class Collector_Factory(Abstract_Collector_Factory):
         name = typeOf.value
         key = None if name not in KEYS else KEYS[name]
         return globals()[typeOf.value](key)
+
