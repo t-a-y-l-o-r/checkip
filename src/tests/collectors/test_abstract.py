@@ -28,23 +28,41 @@ class Dummy_Parser(collectors.Collector_Parser):
         return {}
 
 #       ===================
-#           Tests
+#           Parser
 #       ===================
 
-def test_collector_parser_construction_fail():
+def test_parser_construction_fail():
     with pytest.raises(TypeError):
         collectors.Collector_Parser()
 
+#       ===================
+#           Caller
+#       ===================
 
-def test_collector_caller_construction_fail():
+def test_caller_construction_fail():
     with pytest.raises(TypeError):
         collectors.Collector_Caller()
 
+def test_dummy_caller_key():
+    keys = [
+        "alshdkadjasldshdnasd",
+        1234521412
+    ]
+    for key in keys:
+        col = Dummy_Caller(key)
+        assert key == col.key
 
-def test_collector_core_construction_fail():
+#       ===================
+#           Core
+#       ===================
+
+def test_core_construction_fail():
     with pytest.raises(TypeError):
         collectors.Collector_Core()
 
+#       ===================
+#           Collector
+#       ===================
 
 def test_collector_construction_no_args():
     with pytest.raises(ValueError):

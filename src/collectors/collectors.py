@@ -25,7 +25,7 @@ class Collector_Parser(ABC):
 
 class Collector_Caller(ABC):
     def __init__(self, key: Optional[str]):
-        self.key = key
+        self.key = key # pragma: no cover
 
     @abstractmethod
     async def call(self) -> dict:
@@ -37,9 +37,8 @@ class Collector_Caller(ABC):
 
 
 class Collector_Core(ABC):
-
     def __init__(self):
-        self._report: Optional[dict] = None
+        self._report: Optional[dict] = None # pragma: no cover
 
     @abstractmethod
     async def report(self) -> Union[Coroutine[Any, Any, Any], dict]:
