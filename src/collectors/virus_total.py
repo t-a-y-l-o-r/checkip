@@ -36,6 +36,13 @@ class VT_Status_Types(Enum):
     undetected = "undetected"
     timeout = "timeout"
 
+class VT_Status_Symbols(Enum):
+    harmless = VT_Status_Types.harmless.value: "✅",
+    malicious = VT_Status_Types.malicious.value: "❌",
+    suspicious = VT_Status_Types.suspicious.value: "❌",
+    undetected = VT_Status_Types.undetected.value: "❓",
+    timeout = VT_Status_Types.timeout.value: "❓",
+
 '''
             ================
                Parser
@@ -43,16 +50,6 @@ class VT_Status_Types(Enum):
 '''
 
 class VT_Parser(Collector_Parser):
-    def __init__(self):
-        self._analysis_types = VT_Status_Types
-        self._analysis_symbols = {
-            self._analysis_types.harmless.value: "✅",
-            self._analysis_types.malicious.value: "❌",
-            self._analysis_types.suspicious.value: "❌",
-            self._analysis_types.undetected.value: "❓",
-            self._analysis_types.timeout.value: "❓",
-        }
-
     def parse(self, raw_report: dict) -> dict:
         ip_report = self._parse_ip(raw_report["ip"])
         site_report = self._parse_resolutions(raw_report["resolutions"])
@@ -121,7 +118,7 @@ class VT_Parser(Collector_Parser):
 
     def _last_stats(self, analysis_json: dict) -> dict:
         stats: Dict[Any, int] = dict()
-        for result in self._analysis_types:
+        for result in VT_Status_Types:
             stats[result.value] = 0
 
         for scan in analysis_json.keys():
@@ -133,7 +130,7 @@ class VT_Parser(Collector_Parser):
 
 
     def _determine_overall_status(self, stats: dict) -> str:
-        has_most = self._analysis_types.harmless.value
+        has_most = VT_Status_Types.harmless
         most = 0
 
         for stat_type in stats.keys():
@@ -142,7 +139,7 @@ class VT_Parser(Collector_Parser):
                 most = count
                 has_most = stat_type
 
-        symbol = self._analysis_symbols[has_most]
+        symbol = VT_Status_Symbols[has_most]
         overall_status = f"{has_most} {symbol}"
         return overall_status
 
@@ -191,8 +188,8 @@ class VT_Caller(Collector_Caller):
 
         assert call_type in VT_Call_Type
 
-        url_call_type = f"/{call_type}"
-        limit_str = f"?limit={limit_str}"
+        url_call_type = f"/{call_type.value}"
+        limit_str = f"?limit={limit}"
 
         if call_type is VT_Call_Type.ip:
             url_call_type = ""
@@ -202,7 +199,7 @@ class VT_Caller(Collector_Caller):
             self._root_endpoint,
             self._ip_endpoint,
             ip,
-            call_type,
+            url_call_type,
             limit_str,
         ])
 
@@ -239,3 +236,6 @@ class Virus_Total_Collector(Collector):
     def __init__(self, ip=None, key=None) -> None:
         super().__init__(ip, key, caller=VT_Caller, parser=VT_Parser)
         self._header: Any = None
+
+    async def header(self) -> None:
+        return None
