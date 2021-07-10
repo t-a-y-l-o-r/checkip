@@ -146,11 +146,12 @@ class IP_Checker():
 
         for ip in full_report.keys():
             report_lists = full_report[ip]
+            self.ui.display_ip(ip)
             for pair in report_lists:
                 header = pair[0]
                 report = pair[1]
-                self.ui.display(header, ip)
-                self.ui.display(report)
+                self.ui.display_report(header)
+                self.ui.display_report(report)
                 ip = None
 
 

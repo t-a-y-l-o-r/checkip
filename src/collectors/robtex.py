@@ -44,8 +44,14 @@ class Robtex_Collector(Collector):
     async def report(self) -> Union[Coroutine[Any, Any, Any], str]:
         if self._report is None:
             await self._call_and_parse_all()
+
         assert self._report is not None
-        return self._report
+        report = dict()
+
+        report["header"] = self._header
+        report["report"] = self._report
+
+        return report
 
     async def _call_and_parse_all(self) -> None:
         call_dict = None

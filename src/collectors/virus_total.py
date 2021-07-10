@@ -18,7 +18,7 @@ from .collectors import (
 
 '''
             ================
-               Enums
+               Globals
             ================
 '''
 
@@ -36,12 +36,14 @@ class VT_Status_Types(Enum):
     undetected = "undetected"
     timeout = "timeout"
 
-class VT_Status_Symbols(Enum):
-    harmless = VT_Status_Types.harmless.value: "✅",
-    malicious = VT_Status_Types.malicious.value: "❌",
-    suspicious = VT_Status_Types.suspicious.value: "❌",
-    undetected = VT_Status_Types.undetected.value: "❓",
-    timeout = VT_Status_Types.timeout.value: "❓",
+
+VT_Status_Symbols = {
+    VT_Status_Types.harmless.value: "✅",
+    VT_Status_Types.malicious.value: "❌",
+    VT_Status_Types.suspicious.value: "❌",
+    VT_Status_Types.undetected.value: "❓",
+    VT_Status_Types.timeout.value: "❓",
+}
 
 '''
             ================
@@ -54,9 +56,8 @@ class VT_Parser(Collector_Parser):
         ip_report = self._parse_ip(raw_report["ip"])
         site_report = self._parse_resolutions(raw_report["resolutions"])
 
-        ip_report["additional_information"] = {
-            "sites": site_report
-        }
+        additional_info = ip_report["additional_information"]
+        additional_info["sites"] = site_report
 
         return ip_report
 
@@ -167,7 +168,6 @@ class VT_Caller(Collector_Caller):
         super().__init__(args[0])
 
         self._session_headers = {'x-apikey': self.key}
-
         self._root_endpoint: str = 'https://www.virustotal.com/'
         self._ip_endpoint: str = 'api/v3/ip_addresses/'
 
