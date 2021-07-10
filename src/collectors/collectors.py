@@ -22,7 +22,6 @@ class Collector_Parser(ABC):
         pass
 
 
-
 class Collector_Caller(ABC):
     def __init__(self, key: Optional[str]):
         self.key = key # pragma: no cover
@@ -35,7 +34,6 @@ class Collector_Caller(ABC):
         pass
 
 
-
 class Collector_Core(ABC):
     def __init__(self):
         self._report: Optional[dict] = None # pragma: no cover
@@ -43,7 +41,6 @@ class Collector_Core(ABC):
     @abstractmethod
     async def report(self) -> Union[Coroutine[Any, Any, Any], dict]:
         pass
-
 
 
 class Collector(Collector_Core):

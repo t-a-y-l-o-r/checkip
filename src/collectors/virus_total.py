@@ -175,43 +175,36 @@ class VT_Caller(Collector_Caller):
         self._ip_endpoint: str = 'api/v3/ip_addresses/'
 
 
-
     async def call(self, ip) -> dict:
         response = dict()
-        response["ip"] = await self._call(ip, "ip")
-        response["resolutions"] = await self._call(ip, "resolutions")
+        for call_type in VT_Call_Type:
+            response[call_type.value] = await self._call(ip, call_type)
         return response
 
 
-    async def _call(self, ip: str, call_type: str="ip", limit: int=20) -> dict:
-        '''
-        Call out to a given enpoint based on the call_type.
+    async def _call(self, ip: str, call_type: VT_Call_Type, limit: int=20) -> dict:
+        endpoint = self._generate_endpoint(ip, call_type, limit)
+        return await self._get(endpoint)
 
-        If call_type is not set then the default endpoint is selcted.
-        Otherwise resolutions is called if selected.
-        As a fail safe the un-implemented selections the
-        function will throw a ValueError if it can't parse the
-        call_type.
 
-        Returns the reponse if it determines it is valid
-        '''
-        limit_str = str(limit)
-        if call_type is None:
-            raise ValueError("Call type cannot be none")
-        if call_type == "ip":
-            call_type = ""
+    def _generate_endpoint(self, ip: str, call_type: VT_Call_Type, limit) -> str:
+
+        assert call_type in VT_Call_Type
+
+        url_call_type = f"/{call_type}"
+        limit_str = f"?limit={limit_str}"
+
+        if call_type is VT_Call_Type.ip:
+            url_call_type = ""
             limit_str = ""
-        else:
-            call_type = f"/{call_type}"
-            limit_str = f"?limit={limit_str}"
-        endpoint = "".join([
+
+        return "".join([
             self._root_endpoint,
             self._ip_endpoint,
             ip,
             call_type,
             limit_str,
         ])
-        return await self._get(endpoint)
 
 
     async def _get(self, endpoint: str) -> dict:
@@ -225,8 +218,6 @@ class VT_Caller(Collector_Caller):
                 else:
                     text = await response.text()
                     raise ValueError(f"Server reply: {code} Message: {text}")
-
-
 
 
 '''
@@ -248,12 +239,3 @@ class Virus_Total_Collector(Collector):
     def __init__(self, ip=None, key=None) -> None:
         super().__init__(ip, key, caller=VT_Caller, parser=VT_Parser)
         self._header: Any = None
-
-    async def header(self) -> Union[Coroutine[Any, Any, Any], str]:
-        return None
-    '''
-        if self._header is None:
-            await self._call_and_parse_all()
-        assert self._header is not None
-        return self._header
-    '''
