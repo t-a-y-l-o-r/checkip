@@ -15,76 +15,18 @@ from .collectors import (
     Collector_Caller
 )
 
-'''
-            ================
-               Parser
-            ================
-'''
-class VT_Parser(Collector_Parser):
-    def __init__(self):
-        pass
-
-    def parse(self) -> str:
-        pass
 
 '''
             ================
-               Caller
+               Enums
             ================
 '''
-class VT_Caller(Collector_Caller):
-    def __init__(self, *args):
-        super().__init__(args[0])
 
-        self._session_headers = {'x-apikey': self.key}
+@unique
+class VT_Call_Type(Enum):
+    ip = "ip"
+    resolutions = "resolutions"
 
-        self._root_endpoint: str = 'https://www.virustotal.com/'
-        self._ip_endpoint: str = 'api/v3/ip_addresses/'
-
-    async def call(self, ip: str, call_type: str="ip", limit: int=20) -> dict:
-        '''
-        Call out to a given enpoint based on the call_type.
-
-        If call_type is not set then the default endpoint is selcted.
-        Otherwise resolutions is called if selected.
-        As a fail safe the un-implemented selections the
-        function will throw a ValueError if it can't parse the
-        call_type.
-
-        Returns the reponse if it determines it is valid
-        '''
-        limit_str = str(limit)
-        if call_type is None:
-            raise ValueError("Call type cannot be none")
-        if call_type == "ip":
-            call_type = ""
-            limit_str = ""
-        else:
-            call_type = f"/{call_type}"
-            limit_str = f"?limit={limit_str}"
-        endpoint = "".join([
-            self._root_endpoint,
-            self._ip_endpoint,
-            ip,
-            call_type,
-            limit_str,
-        ])
-        async with aiohttp.ClientSession(headers=self._session_headers) as session:
-            async with session.get(endpoint) as response:
-                code = response.status
-                if code == 200:
-                    return await response.json()
-                elif code == 204:
-                    raise ValueError("Virustotal rate limit reached!")
-                else:
-                    text = await response.text()
-                    raise ValueError(f"Server reply: {code} Message: {text}")
-
-'''
-            ================
-               Collector
-            ================
-'''
 
 @unique
 class VT_Status_Types(Enum):
@@ -94,24 +36,14 @@ class VT_Status_Types(Enum):
     undetected = "undetected"
     timeout = "timeout"
 
-@unique
-class VT_Call_Type(Enum):
-    ip = "ip"
-    resolutions = "resolutions"
+'''
+            ================
+               Parser
+            ================
+'''
 
-class Virus_Total_Collector(Collector):
-    '''
-    Defines the collector for the virustotal api.
-    Main endpoints
-        https://www.virustotal.com/api/v3/
-        https://www.virustotal.com/api/v3/ip_addresses/{ip}/{relationship}
-    Where ip is the ip and relationship is the additioanl
-    data being requested
-    '''
-    def __init__(self, ip=None, key=None) -> None:
-        super().__init__(ip, key, caller=VT_Caller, parser=VT_Parser)
-        self._header: Any = None
-
+class VT_Parser(Collector_Parser):
+    def __init__(self):
         self._analysis_types = VT_Status_Types
         self._analysis_symbols = {
             self._analysis_types.harmless.value: "✅",
@@ -121,24 +53,15 @@ class Virus_Total_Collector(Collector):
             self._analysis_types.timeout.value: "❓",
         }
 
-    async def header(self) -> Union[Coroutine[Any, Any, Any], str]:
-        if self._header is None:
-            await self._call_and_parse_all()
-        assert self._header is not None
-        return self._header
+    def parse(self, raw_report: dict) -> dict:
+        ip_report = self._parse_ip(raw_report["ip"])
+        site_report = self._parse_resolutions(raw_report["resolutions"])
 
-
-    async def _call_and_parse_all(self) -> None:
-        response = await self._caller.call(self.ip, "ip")
-        parsed_dict = self._parse_ip(response)
-        response = await self._caller.call(self.ip, "resolutions")
-        sites = self._parse_resolutions(response)
-
-        parsed_dict["additional_information"] = {
-            "sites": sites
+        ip_report["additional_information"] = {
+            "sites": site_report
         }
-        self._header = parsed_dict["header"]
-        self._report = parsed_dict
+
+        return ip_report
 
     def _parse_ip(self, json_message: dict) -> dict:
         '''
@@ -152,6 +75,7 @@ class Virus_Total_Collector(Collector):
         ❌
         ❓
         '''
+        assert json_message is not None
         header = "Virus Total"
 
         data = json_message["data"]
@@ -196,7 +120,6 @@ class Virus_Total_Collector(Collector):
 
 
     def _last_stats(self, analysis_json: dict) -> dict:
-
         stats: Dict[Any, int] = dict()
         for result in self._analysis_types:
             stats[result.value] = 0
@@ -210,7 +133,6 @@ class Virus_Total_Collector(Collector):
 
 
     def _determine_overall_status(self, stats: dict) -> str:
-
         has_most = self._analysis_types.harmless.value
         most = 0
 
@@ -226,7 +148,6 @@ class Virus_Total_Collector(Collector):
 
 
     def _parse_resolutions(self, response: dict) -> List[str]:
-
         sites = []
         relations_response = response
         data = relations_response.get("data")
@@ -236,3 +157,103 @@ class Virus_Total_Collector(Collector):
             host = attributes.get("host_name")
             sites.append(host)
         return sites
+
+'''
+            ================
+               Caller
+            ================
+'''
+
+
+class VT_Caller(Collector_Caller):
+    def __init__(self, *args):
+        super().__init__(args[0])
+
+        self._session_headers = {'x-apikey': self.key}
+
+        self._root_endpoint: str = 'https://www.virustotal.com/'
+        self._ip_endpoint: str = 'api/v3/ip_addresses/'
+
+
+
+    async def call(self, ip) -> dict:
+        response = dict()
+        response["ip"] = await self._call(ip, "ip")
+        response["resolutions"] = await self._call(ip, "resolutions")
+        return response
+
+
+    async def _call(self, ip: str, call_type: str="ip", limit: int=20) -> dict:
+        '''
+        Call out to a given enpoint based on the call_type.
+
+        If call_type is not set then the default endpoint is selcted.
+        Otherwise resolutions is called if selected.
+        As a fail safe the un-implemented selections the
+        function will throw a ValueError if it can't parse the
+        call_type.
+
+        Returns the reponse if it determines it is valid
+        '''
+        limit_str = str(limit)
+        if call_type is None:
+            raise ValueError("Call type cannot be none")
+        if call_type == "ip":
+            call_type = ""
+            limit_str = ""
+        else:
+            call_type = f"/{call_type}"
+            limit_str = f"?limit={limit_str}"
+        endpoint = "".join([
+            self._root_endpoint,
+            self._ip_endpoint,
+            ip,
+            call_type,
+            limit_str,
+        ])
+        return await self._get(endpoint)
+
+
+    async def _get(self, endpoint: str) -> dict:
+        async with aiohttp.ClientSession(headers=self._session_headers) as session:
+            async with session.get(endpoint) as response:
+                code = response.status
+                if code == 200:
+                    return await response.json()
+                elif code == 204:
+                    raise ValueError("Virustotal rate limit reached!")
+                else:
+                    text = await response.text()
+                    raise ValueError(f"Server reply: {code} Message: {text}")
+
+
+
+
+'''
+            ================
+               Collector
+            ================
+'''
+
+
+class Virus_Total_Collector(Collector):
+    '''
+    Defines the collector for the virustotal api.
+    Main endpoints
+        https://www.virustotal.com/api/v3/
+        https://www.virustotal.com/api/v3/ip_addresses/{ip}/{relationship}
+    Where ip is the ip and relationship is the additioanl
+    data being requested
+    '''
+    def __init__(self, ip=None, key=None) -> None:
+        super().__init__(ip, key, caller=VT_Caller, parser=VT_Parser)
+        self._header: Any = None
+
+    async def header(self) -> Union[Coroutine[Any, Any, Any], str]:
+        return None
+    '''
+        if self._header is None:
+            await self._call_and_parse_all()
+        assert self._header is not None
+        return self._header
+    '''

@@ -28,7 +28,7 @@ class Collector_Caller(ABC):
         self.key = key # pragma: no cover
 
     @abstractmethod
-    async def call(self) -> dict:
+    async def call(self, ip) -> dict:
         '''
         Converts the given json report into a string
         '''
@@ -69,8 +69,6 @@ class Collector(Collector_Core):
 
     async def report(self) -> Union[Coroutine[Any, Any, Any], dict]:
         if self._report is None:
-            result = await self._caller.call()
+            result = await self._caller.call(self.ip)
             self._report = self._parser.parse(result)
         return self._report
-
-
