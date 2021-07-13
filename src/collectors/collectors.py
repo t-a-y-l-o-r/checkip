@@ -69,3 +69,4 @@ class Collector(Collector_Core):
             result = await self._caller.call(self.ip)
             self._report = self._parser.parse(result)
         return self._report
+

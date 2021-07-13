@@ -941,7 +941,7 @@ def test_display_silent(ui_obj, capsys) -> None:
     '''
     ui_obj._silent = True
     header = ""
-    ui_obj.display(header)
+    ui_obj.display_report(header)
     actual = capsys.readouterr().out
     expected = ""
 
@@ -951,22 +951,20 @@ def test_display_silent(ui_obj, capsys) -> None:
     ])
     assert expected == actual, message
 
-def test_display_no_silent(ui_obj, capsys) -> None:
+def test_display_ip(ui_obj, capsys) -> None:
     '''
     Ensures that the correct output is printed when silent is set
     '''
     ui_obj._silent = False
 
-    header = ""
     ip = "8.8.8.8"
-    ui_obj.display(header, ip=ip)
+    ui_obj.display_ip(ip)
     actual = capsys.readouterr().out
 
     expected = "".join([
         "\n    =============================\n",
         f"     [ip]  {ip}  [ip]",
-        "\n    =============================\n",
-        f"{header}\n\n"
+        "\n    =============================\n\n",
     ])
 
     message = "".join([
@@ -983,7 +981,7 @@ def test_display_only_header(ui_obj, capsys) -> None:
 
     header = ""
     ip = None
-    ui_obj.display(header, ip=ip)
+    ui_obj.display_report(header, ip=ip)
     actual = capsys.readouterr().out
 
     expected = f"{header}\n"

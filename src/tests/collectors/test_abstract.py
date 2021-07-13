@@ -15,7 +15,7 @@ class Dummy_Caller(collectors.Collector_Caller):
     def __init__(self, key):
         self.key = key
 
-    async def call(self) -> dict:
+    async def call(self, ip) -> dict:
         await asyncio.sleep(0.1)
         return {}
 
@@ -118,8 +118,10 @@ async def test_collector_report():
         "alshdkadjasldshdnasd",
         1234521412
     ]
+    ip = "8.8.8.8"
     for key in keys:
         col = collectors.Collector(key, caller=Dummy_Caller, parser=Dummy_Parser)
+        col.ip = ip
         report = await col.report()
 
 
