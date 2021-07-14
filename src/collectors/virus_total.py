@@ -15,6 +15,7 @@ from .collectors import (
     Collector_Caller
 )
 
+import json
 
 '''
             ================
@@ -80,11 +81,11 @@ class VT_Parser(Collector_Parser):
         attributes = data["attributes"]
         owner = attributes["as_owner"]
 
-        analysis_json = attributes.get("last_analysis_stats")
+        analysis_json = attributes["last_analysis_stats"]
         stats = self._last_stats(analysis_json)
         checked = self._determine_overall_status(stats)
 
-        analysis_json = attributes.get("last_analysis_results")
+        analysis_json = attributes["last_analysis_results"]
         additional_info = self._last_results(analysis_json)
 
         report = {
@@ -105,6 +106,8 @@ class VT_Parser(Collector_Parser):
             analysis_json: dict,
             clean: str="clean",
             unrated: str="unrated") -> dict:
+
+        assert analysis_json is not None
 
         report = {}
         for stat in analysis_json.keys():
@@ -131,7 +134,7 @@ class VT_Parser(Collector_Parser):
 
 
     def _determine_overall_status(self, stats: dict) -> str:
-        has_most = VT_Status_Types.harmless
+        has_most = VT_Status_Types.harmless.value
         most = 0
 
         for stat_type in stats.keys():
@@ -147,12 +150,11 @@ class VT_Parser(Collector_Parser):
 
     def _parse_resolutions(self, response: dict) -> List[str]:
         sites = []
-        relations_response = response
-        data = relations_response.get("data")
+        data = response.get("data")
         assert data is not None
         for site_data in data:
-            attributes = site_data.get("attributes")
-            host = attributes.get("host_name")
+            attributes = site_data["attributes"]
+            host = attributes["host_name"]
             sites.append(host)
         return sites
 
