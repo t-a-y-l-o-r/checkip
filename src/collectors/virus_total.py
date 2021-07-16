@@ -101,25 +101,6 @@ class VT_Parser(Collector_Parser):
         }
 
 
-    def _last_results(
-            self,
-            analysis_json: dict,
-            clean: str="clean",
-            unrated: str="unrated") -> dict:
-
-        assert analysis_json is not None
-
-        report = {}
-        for stat in analysis_json.keys():
-            agency = analysis_json.get(stat)
-            assert agency is not None
-            result = agency.get("result")
-            if result != clean and result != unrated:
-                report[stat] = agency
-
-        return report
-
-
     def _last_stats(self, analysis_json: dict) -> dict:
         stats: Dict[Any, int] = dict()
         for result in VT_Status_Types:
@@ -129,6 +110,8 @@ class VT_Parser(Collector_Parser):
             scan_result = analysis_json.get(scan)
             assert scan_result is not None
             stats[scan] += scan_result
+
+        print(json.dumps(stats, indent=4))
 
         return stats
 
@@ -146,6 +129,25 @@ class VT_Parser(Collector_Parser):
         symbol = VT_Status_Symbols[has_most]
         overall_status = f"{has_most} {symbol}"
         return overall_status
+
+
+    def _last_results(
+            self,
+            analysis_json: dict,
+            clean: str="clean",
+            unrated: str="unrated") -> dict:
+
+        assert analysis_json is not None
+
+        report = {}
+        for stat in analysis_json.keys():
+            agency = analysis_json.get(stat)
+            assert agency is not None
+            result = agency.get("result")
+            if result != clean and result != unrated:
+                report[stat] = agency
+
+        return report
 
 
     def _parse_resolutions(self, response: dict) -> List[str]:
