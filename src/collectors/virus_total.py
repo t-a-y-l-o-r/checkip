@@ -103,8 +103,7 @@ class VT_Parser(Collector_Parser):
 
 
     def _last_stats(self, analysis_json: dict) -> dict:
-        stats: Dict[Any, int] = dict()
-        stats = dict.fromkeys([status.value for status in VT_Status_Types], 0)
+        stats = {status.value: 0 for status in VT_Status_Types}
 
         for scan in analysis_json.keys():
             scan_result = analysis_json.get(scan)
