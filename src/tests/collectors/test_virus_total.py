@@ -52,6 +52,9 @@ def raw_report() -> dict:
         }
     }
 
+@pytest.fixture
+def ip_report(raw_report) -> dict:
+    return raw_report["ip"]
 
 @pytest.fixture
 def resolutions(raw_report) -> dict:
@@ -78,9 +81,9 @@ def last_analysis_results(raw_report) -> dict:
     return analysis_json
 
 
-#       ===================
-#           Parser
-#       ===================
+#       ======================================
+#           parser.parse
+#       ======================================
 
 def test_parser_parse_keys(parser, raw_report):
     report = parser.parse(raw_report)
@@ -92,6 +95,102 @@ def test_parser_parse_keys(parser, raw_report):
     ]
     for key in keys:
         assert key in report
+
+def test_parser_parse_is_none(parser):
+    with pytest.raises(AssertionError):
+        parser.parse(None)
+
+#       ======================================
+#           parser._parse_ip
+#       ======================================
+
+def test_parser_parse_ip_none(parser):
+    ip_report = None
+    with pytest.raises(AssertionError):
+        parser._parse_ip(ip_report)
+
+
+def test_parser_parse_ip_empty(parser):
+    ip_report = {}
+    with pytest.raises(AssertionError):
+        parser._parse_ip(ip_report)
+
+
+def test_parser_parse_ip_correct_keys(parser, ip_report):
+    keys = [
+        "header",
+        "report",
+        "additional_information"
+    ]
+
+    ip_response = parser._parse_ip(ip_report)
+
+    for key in keys:
+        assert key in ip_response
+
+
+def test_parser_parse_ip_no_data(parser):
+    ip_report = {
+        "not_data": None
+    }
+
+    with pytest.raises(KeyError):
+        parser._parse_ip(ip_report)
+
+
+def test_parser_parse_ip_no_attributes(parser):
+    ip_report = {
+        "data": {
+            "not_attributes": None
+        }
+    }
+
+    with pytest.raises(KeyError):
+        parser._parse_ip(ip_report)
+
+
+def test_parser_parse_ip_no_as_owner(parser):
+    ip_report = {
+        "data": {
+            "attributes": {
+                "not_as_owner": None
+            }
+        }
+    }
+
+    with pytest.raises(KeyError):
+        parser._parse_ip(ip_report)
+
+
+def test_parser_parse_ip_no_last_analysis_stats(parser):
+    ip_report = {
+        "data": {
+            "attributes": {
+                "not_last_analysis_stats": None
+            }
+        }
+    }
+
+    with pytest.raises(KeyError):
+        parser._parse_ip(ip_report)
+
+
+def test_parser_parse_ip_no_last_analysis_results(parser):
+    ip_report = {
+        "data": {
+            "attributes": {
+                "not_last_analysis_results": None
+            }
+        }
+    }
+
+    with pytest.raises(KeyError):
+        parser._parse_ip(ip_report)
+
+
+#       ======================================
+#           parser._last_stats
+#       ======================================
 
 
 def test_parser_last_stats_keys(parser, last_analysis_stats):
@@ -219,6 +318,22 @@ def test_parser_resolutions(parser, resolutions):
         host = attributes["host_name"]
         expected.append(host)
 
+    actual = parser._parse_resolutions(resolutions)
+
+    assert expected == actual
+
+
+def test_parser_resolutions_empty(parser):
+    resolutions = {}
+    expected = []
+    actual = parser._parse_resolutions(resolutions)
+
+    assert expected == actual
+
+
+def test_parser_resolutions_empty(parser):
+    resolutions = None
+    expected = []
     actual = parser._parse_resolutions(resolutions)
 
     assert expected == actual

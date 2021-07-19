@@ -54,7 +54,7 @@ VT_Status_Symbols = {
 
 class VT_Parser(Collector_Parser):
     def parse(self, raw_report: dict) -> dict:
-        print(json.dumps(raw_report, indent=4))
+        assert raw_report is not None
         ip_report = self._parse_ip(raw_report["ip"])
         site_report = self._parse_resolutions(raw_report["resolutions"])
 
@@ -75,7 +75,7 @@ class VT_Parser(Collector_Parser):
         ❌
         ❓
         '''
-        assert json_message is not None
+        assert json_message
         header = "Virus Total"
 
         data = json_message["data"]
@@ -149,6 +149,8 @@ class VT_Parser(Collector_Parser):
 
 
     def _parse_resolutions(self, response: dict) -> List[str]:
+        if not response:
+            return []
         sites = []
         data = response["data"]
         for site_data in data:
