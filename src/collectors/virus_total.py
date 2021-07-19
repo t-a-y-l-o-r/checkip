@@ -54,6 +54,7 @@ VT_Status_Symbols = {
 
 class VT_Parser(Collector_Parser):
     def parse(self, raw_report: dict) -> dict:
+        print(json.dumps(raw_report, indent=4))
         ip_report = self._parse_ip(raw_report["ip"])
         site_report = self._parse_resolutions(raw_report["resolutions"])
 
@@ -111,8 +112,6 @@ class VT_Parser(Collector_Parser):
             assert scan_result is not None
             stats[scan] += scan_result
 
-        print(json.dumps(stats, indent=4))
-
         return stats
 
 
@@ -141,9 +140,8 @@ class VT_Parser(Collector_Parser):
 
         report = {}
         for stat in analysis_json.keys():
-            agency = analysis_json.get(stat)
-            assert agency is not None
-            result = agency.get("result")
+            agency = analysis_json[stat]
+            result = agency["result"]
             if result != clean and result != unrated:
                 report[stat] = agency
 
@@ -152,13 +150,13 @@ class VT_Parser(Collector_Parser):
 
     def _parse_resolutions(self, response: dict) -> List[str]:
         sites = []
-        data = response.get("data")
-        assert data is not None
+        data = response["data"]
         for site_data in data:
             attributes = site_data["attributes"]
             host = attributes["host_name"]
             sites.append(host)
         return sites
+
 
 '''
             ================
@@ -243,3 +241,4 @@ class Virus_Total_Collector(Collector):
 
     async def header(self) -> None:
         return None
+
