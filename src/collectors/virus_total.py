@@ -106,8 +106,7 @@ class VT_Parser(Collector_Parser):
         stats = {status.value: 0 for status in VT_Status_Types}
 
         for scan in analysis_json.keys():
-            scan_result = analysis_json.get(scan)
-            assert scan_result is not None
+            scan_result = analysis_json[scan]
             stats[scan] += scan_result
 
         return stats
