@@ -220,6 +220,11 @@ def test_parser_last_stats_keys_fails(parser, last_analysis_stats):
         assert key not in stats
 
 
+#       ======================================
+#           parser._determine_overall_status
+#       ======================================
+
+
 def test_parser_overall_status_defaults(parser):
     default = VT_Status_Types.harmless.value
     symbol = VT_Status_Symbols[default]
@@ -293,6 +298,11 @@ def test_parser_overall_status(parser):
         assert expected_result == actual_result
 
 
+#       ======================================
+#           parser._last_results
+#       ======================================
+
+
 def test_parser_last_results(parser, last_analysis_results):
     expected = {}
     clean = "clean"
@@ -307,6 +317,11 @@ def test_parser_last_results(parser, last_analysis_results):
     actual = parser._last_results(last_analysis_results)
 
     assert expected == actual
+
+
+#       ======================================
+#           parser._parse_resolutions
+#       ======================================
 
 
 def test_parser_resolutions(parser, resolutions):
@@ -331,10 +346,11 @@ def test_parser_resolutions_empty(parser):
     assert expected == actual
 
 
-def test_parser_resolutions_empty(parser):
+def test_parser_resolutions_none(parser):
     resolutions = None
     expected = []
     actual = parser._parse_resolutions(resolutions)
 
     assert expected == actual
+
 
