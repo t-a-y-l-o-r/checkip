@@ -196,38 +196,6 @@ def test_parser_parse_ip_no_last_analysis_results(parser):
 
 
 #       ======================================
-#           parser._last_stats
-#       ======================================
-
-
-def test_parser_last_stats_keys(parser, last_analysis_stats):
-    stats = parser._last_stats(last_analysis_stats)
-
-    keys = [
-        "harmless",
-        "malicious",
-        "suspicious",
-        "undetected",
-        "timeout"
-    ]
-    for key in keys:
-        assert key in stats
-
-
-def test_parser_last_stats_keys_fails(parser, last_analysis_stats):
-    stats = parser._last_stats(last_analysis_stats)
-
-    keys = [
-        "harmless12-1211212j",
-        "maasdljashdljad",
-        "000000",
-        -1
-    ]
-    for key in keys:
-        assert key not in stats
-
-
-#       ======================================
 #           parser._determine_overall_status
 #       ======================================
 

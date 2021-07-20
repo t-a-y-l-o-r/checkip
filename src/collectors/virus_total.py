@@ -84,18 +84,17 @@ class VT_Parser(Collector_Parser):
         assert ip_message
 
         attributes_json = ip_message["data"]["attributes"]
-        last_stats_json = attributes_json["last_analysis_stats"]
         last_results_json = attributes_json["last_analysis_results"]
 
         owner = attributes_json["as_owner"]
-        stats = self._last_stats(last_stats_json)
-        checked = self._determine_overall_status(last_stats)
+        status = attributes_json["last_analysis_stats"]
+        checked = self._determine_overall_status(status)
         additional_info = self._last_results(last_results_json)
 
         report = {
             "checked": checked,
             "owner": owner,
-            "stats": stats,
+            "status": status,
         }
 
         return {
@@ -103,16 +102,6 @@ class VT_Parser(Collector_Parser):
             "report": report,
             "additional_information": additional_info
         }
-
-
-    def _last_stats(self, analysis_json: dict) -> dict:
-        stats = {status.value: 0 for status in VT_Status_Types}
-
-        for scan in analysis_json.keys():
-            scan_result = analysis_json[scan]
-            stats[scan] += scan_result
-
-        return stats
 
 
     def _determine_overall_status(self, stats: dict) -> str:
