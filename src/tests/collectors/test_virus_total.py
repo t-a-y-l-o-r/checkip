@@ -36,7 +36,14 @@ def raw_report() -> dict:
                           "result": "clean",
                           "method": "blacklist",
                           "engine_name": "Google Safebrowsing"
-                        }
+                        },
+                        "Facebook": {
+                          "category": "malicious",
+                          "result": "not so clean",
+                          "method": "blacklist",
+                          "engine_name": "Safebrowsing"
+                        },
+
                     }
                 }
             }
@@ -225,18 +232,33 @@ def test_parser_last_stats_keys_fails(parser, last_analysis_stats):
 #       ======================================
 
 
-def test_parser_overall_status_defaults(parser):
-    default = VT_Status_Types.harmless.value
-    symbol = VT_Status_Symbols[default]
-    as_status = f"{default} {symbol}"
-    assert as_status == parser._determine_overall_status({})
+def test_parser_overall_status_empty_dict(parser):
+    with pytest.raises(AssertionError):
+        parser._determine_overall_status({})
+
+
+def test_parser_overall_status_none_dict(parser):
+    with pytest.raises(AssertionError):
+        parser._determine_overall_status(None)
+
+def test_parser_overall_status_zero_scans(parser):
+    default_type = VT_Status_Types.harmless.value
+    default_symbol = VT_Status_Symbols[default_type]
+    expected = f"{default_type} {default_symbol}"
+
+    empty_stats = {
+        "harmless": 0,
+        "malicious": 0,
+        "suspicious": 0,
+        "undetected": 0,
+        "timeout": 0
+    }
+    actual = parser._determine_overall_status(empty_stats)
+
+    assert expected == actual
 
 
 def test_parser_overall_status(parser):
-    default = VT_Status_Types.harmless.value
-    symbol = VT_Status_Symbols[default]
-    as_status = f"{default} {symbol}"
-
     stats_list = [
         {
             "input": {
@@ -308,48 +330,37 @@ def test_parser_last_results(parser, last_analysis_results):
     clean = "clean"
     unrated = "unrated"
 
-    for stats in last_analysis_results.keys():
-        agency = last_analysis_results[stats]
-        result = agency["result"]
-        if result != clean and result != unrated:
-            expected[stat] = agency
-
+    dirty = lambda site: site[1]["result"] != "clean" and site[1]["result"] != "unrated"
+    expected = dict(filter(dirty, last_analysis_results.items()))
     actual = parser._last_results(last_analysis_results)
 
     assert expected == actual
 
 
 #       ======================================
-#           parser._parse_resolutions
+#           parser._get_sites_from_resolutions
 #       ======================================
 
 
-def test_parser_resolutions(parser, resolutions):
-    expected = []
-    data = resolutions["data"]
-
-    for site_data in data:
-        attributes = site_data["attributes"]
-        host = attributes["host_name"]
-        expected.append(host)
-
-    actual = parser._parse_resolutions(resolutions)
+def test_get_sites_from_resolutions(parser, resolutions):
+    expected = [site["attributes"]["host_name"] for site in resolutions["data"]]
+    actual = parser._get_sites_from_resolutions(resolutions)
 
     assert expected == actual
 
 
-def test_parser_resolutions_empty(parser):
+def test_parser_get_sites_from_resolutions_empty(parser):
     resolutions = {}
     expected = []
-    actual = parser._parse_resolutions(resolutions)
+    actual = parser._get_sites_from_resolutions(resolutions)
 
     assert expected == actual
 
 
-def test_parser_resolutions_none(parser):
+def test_parser_get_sites_from_resolutions_none(parser):
     resolutions = None
     expected = []
-    actual = parser._parse_resolutions(resolutions)
+    actual = parser._get_sites_from_resolutions(resolutions)
 
     assert expected == actual
 

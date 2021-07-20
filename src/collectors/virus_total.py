@@ -56,7 +56,7 @@ class VT_Parser(Collector_Parser):
     def parse(self, raw_report: dict) -> dict:
         assert raw_report is not None
         ip_report = self._parse_ip(raw_report["ip"])
-        site_report = self._parse_resolutions(raw_report["resolutions"])
+        site_report = self._get_sites_from_resolutions(raw_report["resolutions"])
 
         additional_info = ip_report["additional_information"]
         additional_info["sites"] = site_report
@@ -113,18 +113,29 @@ class VT_Parser(Collector_Parser):
 
 
     def _determine_overall_status(self, stats: dict) -> str:
-        has_most = VT_Status_Types.harmless.value
-        most = 0
+        assert stats
 
-        for stat_type in stats.keys():
-            count = stats[stat_type]
-            if count > most:
-                most = count
-                has_most = stat_type
+        no_scans = all(val == 0 for val in stats.values())
+        if no_scans:
+            return self._default_status()
+        else:
+            return self._most_frequent_status(stats)
 
-        symbol = VT_Status_Symbols[has_most]
-        overall_status = f"{has_most} {symbol}"
-        return overall_status
+
+    def _default_status(self):
+        default_status = VT_Status_Types.harmless.value
+        default_symbol = VT_Status_Symbols[default_status]
+        return f"{default_status} {default_symbol}"
+
+
+    def _most_frequent_status(self, stats):
+        status = max(stats, key=lambda key: stats[key])
+
+        valid_status_types = set(status.value for status in VT_Status_Types)
+        assert status in valid_status_types
+
+        symbol = VT_Status_Symbols[status]
+        return f"{status} {symbol}"
 
 
     def _last_results(
@@ -133,28 +144,20 @@ class VT_Parser(Collector_Parser):
             clean: str="clean",
             unrated: str="unrated") -> dict:
 
-        assert analysis_json is not None
+        assert analysis_json
 
-        report = {}
-        for stat in analysis_json.keys():
-            agency = analysis_json[stat]
-            result = agency["result"]
-            if result != clean and result != unrated:
-                report[stat] = agency
+        dirty = lambda result: result != "clean" and result != "unrated"
+        only_dirty_results = lambda items: dirty(items[1]["result"])
+        report = dict(filter(only_dirty_results, analysis_json.items()))
 
         return report
 
 
-    def _parse_resolutions(self, response: dict) -> List[str]:
-        if not response:
+    def _get_sites_from_resolutions(self, resolutions: dict) -> list:
+        if not resolutions:
             return []
-        sites = []
-        data = response["data"]
-        for site_data in data:
-            attributes = site_data["attributes"]
-            host = attributes["host_name"]
-            sites.append(host)
-        return sites
+        else:
+            return [site["attributes"]["host_name"] for site in resolutions["data"]]
 
 
 '''
