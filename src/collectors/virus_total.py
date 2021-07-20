@@ -169,9 +169,9 @@ class VT_Caller(Collector_Caller):
 
 
     async def call(self, ip) -> dict:
-        response = dict()
-        for call_type in VT_Call_Type:
-            response[call_type.value] = await self._call(ip, call_type)
+        response = {
+            call_type.value: await self._call(ip, call_type) for call_type in VT_Call_Type
+        }
         return response
 
 
@@ -181,7 +181,6 @@ class VT_Caller(Collector_Caller):
 
 
     def _generate_endpoint(self, ip: str, call_type: VT_Call_Type, limit) -> str:
-
         assert call_type in VT_Call_Type
 
         url_call_type = f"/{call_type.value}"
@@ -233,6 +232,8 @@ class Virus_Total_Collector(Collector):
         super().__init__(ip, key, caller=VT_Caller, parser=VT_Parser)
         self._header: Any = None
 
+
     async def header(self) -> None:
         return None
+
 
