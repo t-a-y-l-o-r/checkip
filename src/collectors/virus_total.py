@@ -122,13 +122,13 @@ class VT_Parser(Collector_Parser):
             return self._most_frequent_status(stats)
 
 
-    def _default_status(self):
+    def _default_status(self) -> str:
         default_status = VT_Status_Types.harmless.value
         default_symbol = VT_Status_Symbols[default_status]
         return f"{default_status} {default_symbol}"
 
 
-    def _most_frequent_status(self, stats):
+    def _most_frequent_status(self, stats) -> str:
         status = max(stats, key=lambda key: stats[key])
 
         valid_status_types = set(status.value for status in VT_Status_Types)
@@ -172,8 +172,8 @@ class VT_Caller(Collector_Caller):
         super().__init__(args[0])
 
         self._session_headers = {'x-apikey': self.key}
-        self._root_endpoint: str = 'https://www.virustotal.com/'
-        self._ip_endpoint: str = 'api/v3/ip_addresses/'
+        self._root_endpoint = 'https://www.virustotal.com/'
+        self._ip_endpoint = 'api/v3/ip_addresses/'
 
 
     async def call(self, ip) -> dict:
