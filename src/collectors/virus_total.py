@@ -89,7 +89,7 @@ class VT_Parser(Collector_Parser):
         owner = attributes_json["as_owner"]
         status = attributes_json["last_analysis_stats"]
         checked = self._determine_overall_status(status)
-        additional_info = self._last_results(last_results_json)
+        additional_info = self._filter_last_results(last_results_json)
 
         report = {
             "checked": checked,
@@ -130,7 +130,7 @@ class VT_Parser(Collector_Parser):
         return f"{status} {symbol}"
 
 
-    def _last_results(
+    def _filter_last_results(
             self,
             analysis_json: dict,
             clean: str="clean",

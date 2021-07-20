@@ -289,18 +289,18 @@ def test_parser_overall_status(parser):
 
 
 #       ======================================
-#           parser._last_results
+#           parser._filter_last_results
 #       ======================================
 
 
-def test_parser_last_results(parser, last_analysis_results):
+def test_parser_filter_last_results(parser, last_analysis_results):
     expected = {}
     clean = "clean"
     unrated = "unrated"
 
     dirty = lambda site: site[1]["result"] != "clean" and site[1]["result"] != "unrated"
     expected = dict(filter(dirty, last_analysis_results.items()))
-    actual = parser._last_results(last_analysis_results)
+    actual = parser._filter_last_results(last_analysis_results)
 
     assert expected == actual
 
