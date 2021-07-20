@@ -53,6 +53,11 @@ VT_Status_Symbols = {
 '''
 
 class VT_Parser(Collector_Parser):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._header = "Virus Total"
+
+
     def parse(self, raw_report: dict) -> dict:
         assert raw_report is not None
         ip_report = self._parse_ip(raw_report["ip"])
@@ -63,7 +68,8 @@ class VT_Parser(Collector_Parser):
 
         return ip_report
 
-    def _parse_ip(self, json_message: dict) -> dict:
+
+    def _parse_ip(self, ip_message: dict) -> dict:
         '''
         Parses the raw response body and converts it into a human
         readable format.
@@ -75,19 +81,16 @@ class VT_Parser(Collector_Parser):
         ❌
         ❓
         '''
-        assert json_message
-        header = "Virus Total"
+        assert ip_message
 
-        data = json_message["data"]
-        attributes = data["attributes"]
-        owner = attributes["as_owner"]
+        attributes_json = ip_message["data"]["attributes"]
+        last_stats_json = attributes_json["last_analysis_stats"]
+        last_results_json = attributes_json["last_analysis_results"]
 
-        analysis_json = attributes["last_analysis_stats"]
-        stats = self._last_stats(analysis_json)
-        checked = self._determine_overall_status(stats)
-
-        analysis_json = attributes["last_analysis_results"]
-        additional_info = self._last_results(analysis_json)
+        owner = attributes_json["as_owner"]
+        stats = self._last_stats(last_stats_json)
+        checked = self._determine_overall_status(last_stats)
+        additional_info = self._last_results(last_results_json)
 
         report = {
             "checked": checked,
@@ -96,7 +99,7 @@ class VT_Parser(Collector_Parser):
         }
 
         return {
-            "header": header,
+            "header": self._header,
             "report": report,
             "additional_information": additional_info
         }
