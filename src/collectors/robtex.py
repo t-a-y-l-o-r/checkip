@@ -80,6 +80,9 @@ class Robtex_Collector(Collector):
         super().__init__(ip, key, caller=Robtex_Caller, parser=Robtex_Parser)
         self._header: Optional[str] = None
 
+    async def header(self) -> None:
+        return None
+
     async def _call_and_parse_all(self) -> None:
         call_dict = None
         try:

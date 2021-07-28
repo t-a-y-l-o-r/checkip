@@ -216,7 +216,8 @@ class IP_Checker():
         for collector in collectors:
             collector.ip = ip
             report_funcs.append(collector.header())
-            report_funcs.append(collector.report())
+            # report_funcs.append(collector.report())
+            break
 
         await asyncio.gather(*report_funcs, return_exceptions=True)
 
