@@ -58,8 +58,11 @@ class Collector_Factory(Abstract_Collector_Factory):
     Concrete factory for the collectors defined within this module
     '''
     def of(self, typeOf: Collector_Types) -> "Collector":
-        assert typeOf in Collector_Types
+        message = "".join([
+            "typeOf positional argument must be of type: Collector_Types"
+        ])
+        assert typeOf in Collector_Types, message
         name = typeOf.value
-        key = None if name not in KEYS else KEYS[name]
-        return globals()[typeOf.value](key)
+        key = KEYS.get(name, None)
+        return globals()[name](key)
 

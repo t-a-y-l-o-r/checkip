@@ -11,13 +11,27 @@ import json
 # async stuff
 import aiohttp
 
-from .collectors import Collector
+from .collectors import (
+    Collector,
+    Collector_Parser,
+    Collector_Caller
+)
 
 '''
         =================
         Robtext Collector
         =================
 '''
+
+class Robtex_Parser(Collector_Parser):
+    def __init__(self, *args, **kwargs) -> None:
+        self._header = "Robtex"
+
+    def parse(self, raw_report: dict) -> dict:
+        return raw_report
+
+class Robtex_Caller(Collector_Caller):
+    def __init__(self, key: str) -> None:
 
 
 class Robtex_Collector(Collector):

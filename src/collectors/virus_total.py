@@ -53,7 +53,7 @@ VT_Status_Symbols = {
 '''
 
 class VT_Parser(Collector_Parser):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._header = "Virus Total"
 
@@ -120,7 +120,7 @@ class VT_Parser(Collector_Parser):
         return f"{default_status} {default_symbol}"
 
 
-    def _most_frequent_status(self, stats) -> str:
+    def _most_frequent_status(self, stats: dict) -> str:
         status = max(stats, key=lambda key: stats[key])
 
         valid_status_types = set(status.value for status in VT_Status_Types)
@@ -132,15 +132,15 @@ class VT_Parser(Collector_Parser):
 
     def _filter_last_results(
             self,
-            analysis_json: dict,
+            last_results_json: dict,
             clean: str="clean",
             unrated: str="unrated") -> dict:
 
-        assert analysis_json
+        assert last_results_json
 
         dirty = lambda result: result != "clean" and result != "unrated"
         only_dirty_results = lambda items: dirty(items[1]["result"])
-        report = dict(filter(only_dirty_results, analysis_json.items()))
+        report = dict(filter(only_dirty_results, last_results_json.items()))
 
         return report
 
@@ -160,8 +160,8 @@ class VT_Parser(Collector_Parser):
 
 
 class VT_Caller(Collector_Caller):
-    def __init__(self, *args):
-        super().__init__(args[0])
+    def __init__(self, key: str):
+        super().__init__(key)
 
         self._session_headers = {'x-apikey': self.key}
         self._root_endpoint = 'https://www.virustotal.com/'
