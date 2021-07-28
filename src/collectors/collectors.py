@@ -27,7 +27,7 @@ class Collector_Caller(ABC):
         self.key = key # pragma: no cover
 
     @abstractmethod
-    async def call(self, ip) -> dict:
+    async def call(self, ip: str) -> dict:
         '''
         Converts the given json report into a string
         '''

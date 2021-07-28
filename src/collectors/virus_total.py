@@ -168,7 +168,7 @@ class VT_Caller(Collector_Caller):
         self._ip_endpoint = 'api/v3/ip_addresses/'
 
 
-    async def call(self, ip) -> dict:
+    async def call(self, ip: str) -> dict:
         response = {
             call_type.value: await self._call(ip, call_type) for call_type in VT_Call_Type
         }
@@ -230,7 +230,7 @@ class Virus_Total_Collector(Collector):
     '''
     def __init__(self, ip=None, key=None) -> None:
         super().__init__(ip, key, caller=VT_Caller, parser=VT_Parser)
-        self._header: Any = None
+        self._header: Optional[str] = None
 
 
     async def header(self) -> None:

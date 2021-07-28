@@ -32,6 +32,40 @@ class Robtex_Parser(Collector_Parser):
 
 class Robtex_Caller(Collector_Caller):
     def __init__(self, key: str) -> None:
+        super().__init__(key)
+        self._endpoint: str = "https://freeapi.robtex.com"
+
+    async def call(self, ip: str) -> dict:
+        return await self._call(call_type="ip")
+
+    async def _call(self, call_type: str="ip") -> dict:
+        '''
+        Calls out to the robtext end point
+        https://freeapi.robtex.com/ipquery/{ip}
+
+        Providing and attempting to route the response
+        '''
+        if call_type is None:
+            raise ValueError(f"Invalid call type {call_type}")
+        endpoint = ""
+        if call_type == "ip":
+            endpoint = "".join([
+                self._endpoint,
+                "/ipquery/",
+                str(self.ip)
+            ])
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(endpoint) as response:
+                code = response.status
+                if code == 200:
+                    return await response.json()
+                elif code == 429:
+                    raise ValueError("Robtex rate limit reached!")
+                else:
+                    text = await response.json()
+                    raise IOError(f"Server reply: {code} Message: {text}")
+
 
 
 class Robtex_Collector(Collector):
@@ -42,30 +76,9 @@ class Robtex_Collector(Collector):
     Primarily used to cooberate related ip's and
     geo location data.
     '''
-    def __init__(self, ip: str=None, key=None) -> None:
-        super().__init__(ip, key)
-        self._session = requests.Session()
+    def __init__(self, ip: str=None, key: str=None) -> None:
+        super().__init__(ip, key, caller=Robtex_Caller, parser=Robtex_Parser)
         self._header: Optional[str] = None
-        self._report: Optional[str] = None
-        self._endpoint: str = "https://freeapi.robtex.com"
-
-    async def header(self) -> Union[Coroutine[Any, Any, Any], str]:
-        if self._header is None:
-            await self._call_and_parse_all()
-        assert self._header is not None
-        return self._header
-
-    async def report(self) -> Union[Coroutine[Any, Any, Any], str]:
-        if self._report is None:
-            await self._call_and_parse_all()
-
-        assert self._report is not None
-        report = dict()
-
-        report["header"] = self._header
-        report["report"] = self._report
-
-        return report
 
     async def _call_and_parse_all(self) -> None:
         call_dict = None
@@ -114,30 +127,21 @@ class Robtex_Collector(Collector):
         )
         return header, report
 
-    async def _call(self, call_type: str="ip") -> dict:
-        '''
-        Calls out to the robtext end point
-        https://freeapi.robtex.com/ipquery/{ip}
+    ## TODO: Delete these
+    async def old_header(self) -> Union[Coroutine[Any, Any, Any], str]:
+        if self._header is None:
+            await self._call_and_parse_all()
+        assert self._header is not None
+        return self._header
 
-        Providing and attempting to route the response
-        '''
-        if call_type is None:
-            raise ValueError(f"Invalid call type {call_type}")
-        endpoint = ""
-        if call_type == "ip":
-            endpoint = "".join([
-                self._endpoint,
-                "/ipquery/",
-                str(self.ip)
-            ])
+    async def old_report(self) -> Union[Coroutine[Any, Any, Any], str]:
+        if self._report is None:
+            await self._call_and_parse_all()
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(endpoint) as response:
-                code = response.status
-                if code == 200:
-                        return await response.json()
-                elif code == 429:
-                    raise ValueError("Robtex rate limit reached!")
-                else:
-                    text = await response.json()
-                    raise IOError(f"Server reply: {code} Message: {text}")
+        assert self._report is not None
+        report = dict()
+
+        report["header"] = self._header
+        report["report"] = self._report
+
+        return report
