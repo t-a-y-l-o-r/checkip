@@ -28,7 +28,10 @@ class Robtex_Parser(Collector_Parser):
         self._header = "Robtex"
 
     def parse(self, raw_report: dict) -> dict:
-        return raw_report
+        return {
+            "header": self._header,
+            "report": raw_report
+        }
 
 class Robtex_Caller(Collector_Caller):
     def __init__(self, key: str) -> None:
@@ -36,9 +39,9 @@ class Robtex_Caller(Collector_Caller):
         self._endpoint: str = "https://freeapi.robtex.com"
 
     async def call(self, ip: str) -> dict:
-        return await self._call(call_type="ip")
+        return await self._call(ip, call_type="ip")
 
-    async def _call(self, call_type: str="ip") -> dict:
+    async def _call(self, ip: str, call_type: str="ip") -> dict:
         '''
         Calls out to the robtext end point
         https://freeapi.robtex.com/ipquery/{ip}
@@ -52,7 +55,7 @@ class Robtex_Caller(Collector_Caller):
             endpoint = "".join([
                 self._endpoint,
                 "/ipquery/",
-                str(self.ip)
+                ip
             ])
 
         async with aiohttp.ClientSession() as session:
