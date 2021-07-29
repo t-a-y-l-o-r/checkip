@@ -5,8 +5,8 @@ from typing import (
     Coroutine,
     Union
 )
-import requests
-import json
+
+from enum import Enum, unique
 
 # async stuff
 import aiohttp
@@ -26,18 +26,36 @@ from .collectors import (
 class Robtex_Parser(Collector_Parser):
     def __init__(self, *args, **kwargs) -> None:
         self._header = "Robtex"
+        self._header_key = "header"
+
+        self._report_key = "report"
+        self._add_info_key = "additional_information"
+
+        self._error_key = "ERROR"
 
 
     def parse(self, raw_report: dict) -> dict:
-        output = {"header": self._header}
-        error_message = raw_report.get("ERROR", None)
+        error_message = raw_report.get(self._error_key, None)
 
-        if raw_report.get("ERROR", None):
-            output["report"] = error_message
-        else:
-            output["report"] = self._build_report(raw_report)
-            output["additional_information"] = self._build_additional_information(raw_report)
-        return output
+        report = self._build_error_report(error_message) if error_message else \
+                 self._build_valid_report(raw_report)
+
+        report[self._header_key] = self._header
+        return report
+
+
+    def _build_error_report(self, error_message: str) -> dict:
+        return {
+            self._report_key : error_message,
+            self._add_info_key: None
+        }
+
+
+    def _build_valid_report(self, message: dict) -> dict:
+        return {
+            self._report_key: self._build_report(raw_report),
+            self._add_info_key: self._build_additional_information(raw_report)
+        }
 
 
     def _build_report(self, call_dict: dict) -> dict:
@@ -48,29 +66,52 @@ class Robtex_Parser(Collector_Parser):
                 "bgproute": call_dict.get("bgproute", None),
                 "routedesc": call_dict.get("routedesc", None),
                 "country": call_dict.get("country", None),
-                "country": call_dict.get("city", None),
+                "city": call_dict.get("city", None),
         }
         return report
 
 
     def _build_additional_information(self, call_dict: dict) -> dict:
         assert call_dict is not None
-        additional_information =  {
-            "passiveDNS" : call_dict.get("pas", None),
-            "activeDNS": call_dict.get("act", None)
+
+        passive_dict = call_dict.get("pas", None)
+        passive_list = self._build_passive_dns_list(passive_dict)
+
+        active_dict = call_dict.get("act", None)
+        active_list = self._build_active_dns_list(active_dict)
+
+        return {
+            "passive_dns": passive_list,
+            "active_dns": active_list
         }
-        return additional_information
+
+
+    def _build_passive_dns_list(self, passive_dict: dict, site_key: str="o") -> list:
+        return self._build_dns_list(passive_dict, site_key)
+
+
+    def _build_active_dns_list(self, active_dict: dict, site_key: str="o") -> list:
+        return self._build_dns_list(active_dict, site_key)
+
+
+    def _build_dns_list(self, dns_dict: dict, site_key) -> list:
+        if dns_dict:
+            return [dict_pair[site_key] for dict_pair in dns_dict]
+        else:
+            return None
 
 
 class Robtex_Caller(Collector_Caller):
     def __init__(self, key: str) -> None:
         super().__init__(key)
-        self._endpoint: str = "https://freeapi.robtex.com"
+        self._base_endpoint: str = "https://freeapi.robtex.com"
+
 
     async def call(self, ip: str) -> dict:
         return await self._call(ip, call_type="ip")
 
-    async def _call(self, ip: str, call_type: str="ip") -> dict:
+
+    async def _call(self, ip: str) -> dict:
         '''
         Calls out to the robtext end point
         https://freeapi.robtex.com/ipquery/{ip}
@@ -79,13 +120,8 @@ class Robtex_Caller(Collector_Caller):
         '''
         if call_type is None:
             raise ValueError(f"Invalid call type {call_type}")
-        endpoint = ""
-        if call_type == "ip":
-            endpoint = "".join([
-                self._endpoint,
-                "/ipquery/",
-                ip
-            ])
+
+        endpoint = self._build_endpoint(ip)
 
         async with aiohttp.ClientSession() as session:
             async with session.get(endpoint) as response:
@@ -97,6 +133,15 @@ class Robtex_Caller(Collector_Caller):
                 else:
                     text = await response.json()
                     raise IOError(f"Server reply: {code} Message: {text}")
+
+
+    def _build_endpoint(self, ip) -> str:
+        return "".join([
+            self._base_endpoint,
+            "/ipquery/",
+            ip
+        ])
+
 
 
 
@@ -112,6 +157,8 @@ class Robtex_Collector(Collector):
         super().__init__(ip, key, caller=Robtex_Caller, parser=Robtex_Parser)
         self._header: Optional[str] = None
 
+
     async def header(self) -> None:
         return None
+
 
