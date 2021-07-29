@@ -49,15 +49,16 @@ def parser() -> Robtex_Parser:
 #       ======================================
 
 def test_parser_parse_keys(parser: Robtex_Parser, raw_report: dict) -> None:
-    keys = [
+    expected_keys = {
         "header",
         "report",
         "additional_information"
-    ]
-    report = parser.parse(raw_report)
+    }
 
-    for key in keys:
-        assert key in report
+    report = parser.parse(raw_report)
+    actual_keys = set(report.keys())
+
+    assert expected_keys == actual_keys
 
 
 def test_parser_parse_empty(parser: Robtex_Parser) -> None:
@@ -77,16 +78,16 @@ def test_parser_parse_bad_keys(parser: Robtex_Parser) -> None:
         "123123": 123123
     }
 
-    output_keys = [
+    expected_keys = {
         "header",
         "report",
         "additional_information"
-    ]
+    }
 
     report = parser.parse(report_with_bad_keys)
+    actual_keys = set(report.keys())
 
-    for key in output_keys:
-        assert key in report
+    assert expected_keys == actual_keys
 
 
 def test_parser_parse_error_message(parser: Robtex_Parser) -> None:
@@ -94,26 +95,47 @@ def test_parser_parse_error_message(parser: Robtex_Parser) -> None:
         "ERROR": "some error message"
     }
 
-    output_keys = [
+    expected_keys = {
         "header",
         "report",
         "additional_information"
-    ]
+    }
 
     report = parser.parse(error_report)
+    actual_keys = set(report.keys())
+
+    assert expected_keys == actual_keys
 
     actual = report["report"]
     expected = error_report["ERROR"]
 
     assert expected == actual
 
-    for key in output_keys:
-        assert key in report
-
 
 #       ======================================
 #           parser._build_error_report
 #       ======================================
-# def test_parser_build_error_report()
+
+def test_parser_build_error_report(parser: Robtex_Parser) -> None:
+    error_messages = [
+        "timeout",
+        "other message that have failed",
+        None
+    ]
+
+    expected_keys = {
+        "report",
+        "additional_information"
+    }
+
+    for error in error_messages:
+
+        report = parser._build_error_report(error)
+        actual_keys = set(report.keys())
+
+        assert expected_keys == actual_keys
+
+
+
 
 
