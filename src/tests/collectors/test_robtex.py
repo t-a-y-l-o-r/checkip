@@ -89,6 +89,31 @@ def test_parser_parse_bad_keys(parser: Robtex_Parser) -> None:
         assert key in report
 
 
+def test_parser_parse_error_message(parser: Robtex_Parser) -> None:
+    error_report = {
+        "ERROR": "some error message"
+    }
+
+    output_keys = [
+        "header",
+        "report",
+        "additional_information"
+    ]
+
+    report = parser.parse(error_report)
+
+    actual = report["report"]
+    expected = error_report["ERROR"]
+
+    assert expected == actual
+
+    for key in output_keys:
+        assert key in report
+
+
 #       ======================================
 #           parser._build_error_report
 #       ======================================
+# def test_parser_build_error_report()
+
+
