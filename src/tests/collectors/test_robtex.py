@@ -15,7 +15,7 @@ def raw_report() -> dict:
         "asdesc": "NeuStar NeuStar, Inc",
         "whoisdesc": "Google LLC (GOGL)",
         "routedesc": "SP_BEEKSFX",
-        "bgproute": "8.8.8.0/24"
+        "bgproute": "8.8.8.0/24",
         "act": [
             {
               "o": "50661.red",
@@ -38,9 +38,21 @@ def raw_report() -> dict:
         ],
     }
 
+@pytest.fixture
+def parser() -> Robtex_Parser:
+    return Robtex_Parser()
+
 #       ======================================
 #           parser.parse
 #       ======================================
 
-def test_parser_parse_keys(parser, raw_report) -> None:
-    return None
+def test_parser_parse_keys(parser: Robtex_Parser, raw_report: dict) -> None:
+    keys = [
+        "header",
+        "report",
+        "additional_information"
+    ]
+    report = parser.parse(raw_report)
+
+    for key in keys:
+        assert key in report

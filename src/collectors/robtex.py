@@ -51,10 +51,10 @@ class Robtex_Parser(Collector_Parser):
         }
 
 
-    def _build_valid_report(self, message: dict) -> dict:
+    def _build_valid_report(self, report: dict) -> dict:
         return {
-            self._report_key: self._build_report(raw_report),
-            self._add_info_key: self._build_additional_information(raw_report)
+            self._report_key: self._build_report(report),
+            self._add_info_key: self._build_additional_information(report)
         }
 
 
