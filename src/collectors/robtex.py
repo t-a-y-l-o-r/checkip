@@ -115,22 +115,3 @@ class Robtex_Collector(Collector):
     async def header(self) -> None:
         return None
 
-
-    ## TODO: Delete these
-    async def old_header(self) -> Union[Coroutine[Any, Any, Any], str]:
-        if self._header is None:
-            await self._call_and_parse_all()
-        assert self._header is not None
-        return self._header
-
-    async def old_report(self) -> Union[Coroutine[Any, Any, Any], str]:
-        if self._report is None:
-            await self._call_and_parse_all()
-
-        assert self._report is not None
-        report = dict()
-
-        report["header"] = self._header
-        report["report"] = self._report
-
-        return report
