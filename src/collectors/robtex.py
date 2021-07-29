@@ -27,11 +27,40 @@ class Robtex_Parser(Collector_Parser):
     def __init__(self, *args, **kwargs) -> None:
         self._header = "Robtex"
 
+
     def parse(self, raw_report: dict) -> dict:
-        return {
-            "header": self._header,
-            "report": raw_report
+        output = {"header": self._header}
+        error_message = raw_report.get("ERROR", None)
+
+        if raw_report.get("ERROR", None):
+            output["report"] = error_message
+        else:
+            output["report"] = self._build_report(raw_report)
+            output["additional_information"] = self._build_additional_information(raw_report)
+        return output
+
+
+    def _build_report(self, call_dict: dict) -> dict:
+        assert call_dict is not None
+        report = {
+                "asname": call_dict.get("asname", None),
+                "whois": call_dict.get("whoisdesc", None),
+                "bgproute": call_dict.get("bgproute", None),
+                "routedesc": call_dict.get("routedesc", None),
+                "country": call_dict.get("country", None),
+                "country": call_dict.get("city", None),
         }
+        return report
+
+
+    def _build_additional_information(self, call_dict: dict) -> dict:
+        assert call_dict is not None
+        additional_information =  {
+            "passiveDNS" : call_dict.get("pas", None),
+            "activeDNS": call_dict.get("act", None)
+        }
+        return additional_information
+
 
 class Robtex_Caller(Collector_Caller):
     def __init__(self, key: str) -> None:
@@ -64,7 +93,7 @@ class Robtex_Caller(Collector_Caller):
                 if code == 200:
                     return await response.json()
                 elif code == 429:
-                    raise ValueError("Robtex rate limit reached!")
+                    return {"ERROR": "rate limit reached"}
                 else:
                     text = await response.json()
                     raise IOError(f"Server reply: {code} Message: {text}")
@@ -86,52 +115,6 @@ class Robtex_Collector(Collector):
     async def header(self) -> None:
         return None
 
-    async def _call_and_parse_all(self) -> None:
-        call_dict = None
-        try:
-            call_dict = await self._call()
-        except ValueError as e:
-            call_dict = None
-
-        if call_dict is None:
-            self._header, self._report = self._build_rate_limit_header()
-        else:
-            self._header, self._report = self._build_safe_report(call_dict)
-
-    def _build_rate_limit_header(self) -> Tuple[Any, Any]:
-        header = "".join([
-            "\n\n\t[Robtex]\n\n",
-            "[ERROR]: Rate limit reached\n\n",
-        ])
-        report = {"ERROR": "rate limit reached"}
-        return (header, report)
-
-    def _build_safe_report(self, call_dict: dict) -> Tuple[Any, Any]:
-        assert call_dict is not None
-        header = "".join([
-            "\n\n\t[Robtex]\n\n[asname]: ",
-            str(call_dict.get("asname")),
-            "\n[whois]: ",
-            str(call_dict.get("whoisdesc")),
-            "\n[bgproute]: ",
-            str(call_dict.get("bgproute")),
-            "\n[route]: ",
-            str(call_dict.get("routedesc")),
-            "\n[country]: ",
-            str(call_dict.get("country")),
-            "\n[city]: ",
-            str(call_dict.get("city")),
-            "\n"
-        ])
-        report = json.dumps(
-            {
-                "passiveDNS" : call_dict.get("pas"),
-                "activeDNS": call_dict.get("act")
-            },
-            indent=4,
-            sort_keys=True
-        )
-        return header, report
 
     ## TODO: Delete these
     async def old_header(self) -> Union[Coroutine[Any, Any, Any], str]:
