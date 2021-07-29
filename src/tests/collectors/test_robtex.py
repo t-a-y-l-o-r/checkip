@@ -135,7 +135,10 @@ def test_parser_build_error_report(parser: Robtex_Parser) -> None:
 
         assert expected_keys == actual_keys
 
+        add_info = report["additional_information"]
+        assert None == add_info
 
 
-
-
+#       ======================================
+#           parser._build_valid_report
+#       ======================================
