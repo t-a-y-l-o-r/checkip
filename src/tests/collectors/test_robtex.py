@@ -38,9 +38,11 @@ def raw_report() -> dict:
         ],
     }
 
+
 @pytest.fixture
 def parser() -> Robtex_Parser:
     return Robtex_Parser()
+
 
 #       ======================================
 #           parser.parse
@@ -66,3 +68,27 @@ def test_parser_parse_empty(parser: Robtex_Parser) -> None:
     for bad_report in should_fail:
         with pytest.raises(AssertionError):
             report = parser.parse(bad_report)
+
+
+def test_parser_parse_bad_keys(parser: Robtex_Parser) -> None:
+    report_with_bad_keys = {
+        "asdlhalsdjas": [],
+        "asdhaljsdas": [],
+        "123123": 123123
+    }
+
+    output_keys = [
+        "header",
+        "report",
+        "additional_information"
+    ]
+
+    report = parser.parse(report_with_bad_keys)
+
+    for key in output_keys:
+        assert key in report
+
+
+#       ======================================
+#           parser._build_error_report
+#       ======================================
