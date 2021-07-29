@@ -35,6 +35,7 @@ class Robtex_Parser(Collector_Parser):
 
 
     def parse(self, raw_report: dict) -> dict:
+        assert raw_report
         error_message = raw_report.get(self._error_key, None)
 
         report = self._build_error_report(error_message) if error_message else \

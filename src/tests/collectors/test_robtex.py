@@ -56,3 +56,13 @@ def test_parser_parse_keys(parser: Robtex_Parser, raw_report: dict) -> None:
 
     for key in keys:
         assert key in report
+
+
+def test_parser_parse_empty(parser: Robtex_Parser) -> None:
+    should_fail = [
+        None,
+        {}
+    ]
+    for bad_report in should_fail:
+        with pytest.raises(AssertionError):
+            report = parser.parse(bad_report)
