@@ -7,22 +7,22 @@ assignees: t-a-y-l-o-r
 
 ---
 
-**Detailed Description**
+## Detailed Description
 
 Describe the feature
 
-**Context**
+## Context
 
 Explain why you'd want to add this in. 
 
 What problem does it solve?
 
-**Possible Implementation**
+## Possible Implementation
 
 ```
 code snippet or shell command here!
 ```
 
-**Additioal Notes**
+## Additioal Notes
 
 Your notes here
