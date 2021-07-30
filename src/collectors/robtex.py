@@ -95,7 +95,7 @@ class Robtex_Parser(Collector_Parser):
         return self._build_dns_list(active_dict, site_key)
 
 
-    def _build_dns_list(self, dns_dict: dict, site_key) -> list:
+    def _build_dns_list(self, dns_dict: dict, site_key: str) -> list:
         if dns_dict:
             return [dict_pair[site_key] for dict_pair in dns_dict]
         else:
@@ -140,8 +140,6 @@ class Robtex_Caller(Collector_Caller):
             "/ipquery/",
             ip
         ])
-
-
 
 
 class Robtex_Collector(Collector):

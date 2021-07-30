@@ -26,7 +26,7 @@ def raw_report() -> dict:
               "t": 1493294473
             }
         ],
-        "acth": [
+        "pas": [
             {
               "o": "50661.red",
               "t": 1505943755
@@ -229,4 +229,68 @@ def test_parser_build_add_info_valid(parser: Robtex_Parser, raw_report: dict) ->
     actual_keys = set(report.keys())
 
     assert expected_keys == actual_keys
+
+
+#       ======================================
+#        parser._build_passive_dns_list
+#       ======================================
+
+def test_praser_build_passive_dns_list_none(parser: Robtex_Parser) -> None:
+    expected = None
+    actual = parser._build_passive_dns_list(None)
+
+    assert expected == actual
+
+
+def test_praser_build_passive_dns_list_valid(parser: Robtex_Parser, raw_report: dict) -> None:
+    passive_dns = raw_report["pas"]
+    site_key = "o"
+    expected = [dict_pair[site_key] for dict_pair in passive_dns]
+
+    actual = parser._build_passive_dns_list(passive_dns)
+
+    assert expected == actual
+
+
+#       ======================================
+#        parser._build_passive_dns_list
+#       ======================================
+
+def test_praser_build_active_dns_list_none(parser: Robtex_Parser) -> None:
+    expected = None
+    actual = parser._build_active_dns_list(None)
+
+    assert expected == actual
+
+
+def test_praser_build_active_dns_list_valid(parser: Robtex_Parser, raw_report: dict) -> None:
+    active_dns = raw_report["act"]
+    site_key = "o"
+    expected = [dict_pair[site_key] for dict_pair in active_dns]
+
+    actual = parser._build_active_dns_list(active_dns)
+
+    assert expected == actual
+
+
+#       ======================================
+#        parser._build_dns_list
+#       ======================================
+
+def test_praser_build_dns_list_none(parser: Robtex_Parser) -> None:
+    expected = None
+    actual = parser._build_dns_list(None, None)
+
+    assert expected == actual
+
+
+def test_praser_build_active_dns_list_valid(parser: Robtex_Parser, raw_report: dict) -> None:
+    active_dns = raw_report["act"]
+    site_key = "o"
+    expected = [dict_pair[site_key] for dict_pair in active_dns]
+
+    actual = parser._build_dns_list(active_dns, site_key)
+
+    assert expected == actual
+
 
