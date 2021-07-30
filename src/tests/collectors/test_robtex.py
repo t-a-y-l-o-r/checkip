@@ -184,3 +184,49 @@ def test_parser_build_add_info_none_fail(parser: Robtex_Parser) -> None:
     with pytest.raises(AssertionError):
         report = parser._build_report(None)
 
+
+def test_parser_build_add_info_bad_keys(parser: Robtex_Parser) -> None:
+    report = {
+        "some_key": "value",
+        "asldhajsldhals": "1232103",
+    }
+    expected_keys = {
+        "passive_dns",
+        "active_dns"
+    }
+    report = parser._build_additional_information(report)
+    actual_keys = set(report.keys())
+
+    assert expected_keys == actual_keys
+
+
+def test_parser_build_add_info_bad_keys(parser: Robtex_Parser) -> None:
+    report = {
+        "some_key": "value",
+        "asldhajsldhals": "1232103",
+    }
+    expected_keys = {
+        "passive_dns",
+        "active_dns"
+    }
+    report = parser._build_additional_information(report)
+    actual_keys = set(report.keys())
+
+    values = [value for key, value in report.items()]
+    has_values = all(values)
+
+    assert has_values == False
+    assert expected_keys == actual_keys
+
+
+def test_parser_build_add_info_valid(parser: Robtex_Parser, raw_report: dict) -> None:
+    expected_keys = {
+        "passive_dns",
+        "active_dns"
+    }
+
+    report = parser._build_additional_information(raw_report)
+    actual_keys = set(report.keys())
+
+    assert expected_keys == actual_keys
+
