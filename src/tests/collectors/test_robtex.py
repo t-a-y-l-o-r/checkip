@@ -143,7 +143,7 @@ def test_parser_build_error_report(parser: Robtex_Parser) -> None:
 #           parser._build_valid_report
 #       ======================================
 
-def test_parser_build_error_report(parser: Robtex_Parser, raw_report: dict) -> None:
+def test_parser_build_valid_report(parser: Robtex_Parser, raw_report: dict) -> None:
     expected_keys = {
         "report",
         "additional_information"
@@ -153,4 +153,25 @@ def test_parser_build_error_report(parser: Robtex_Parser, raw_report: dict) -> N
     actual_keys = set(report.keys())
 
     assert expected_keys == actual_keys
+
+
+#       ======================================
+#           parser._build_report
+#       ======================================
+
+def test_parser_build_report(parser: Robtex_Parser, raw_report: dict) -> None:
+    expected_keys = {
+        "asname",
+        "whois",
+        "bgproute",
+        "routedesc",
+        "country",
+        "city"
+    }
+
+    report = parser._build_report(raw_report)
+    actual_keys = set(report.keys())
+
+    assert expected_keys == actual_keys
+
 

@@ -109,7 +109,7 @@ class Robtex_Caller(Collector_Caller):
 
 
     async def call(self, ip: str) -> dict:
-        return await self._call(ip, call_type="ip")
+        return await self._call(ip)
 
 
     async def _call(self, ip: str) -> dict:
@@ -119,9 +119,7 @@ class Robtex_Caller(Collector_Caller):
 
         Providing and attempting to route the response
         '''
-        if call_type is None:
-            raise ValueError(f"Invalid call type {call_type}")
-
+        assert ip
         endpoint = self._build_endpoint(ip)
 
         async with aiohttp.ClientSession() as session:
