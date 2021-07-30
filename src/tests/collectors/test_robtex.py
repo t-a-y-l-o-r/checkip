@@ -175,3 +175,12 @@ def test_parser_build_report(parser: Robtex_Parser, raw_report: dict) -> None:
     assert expected_keys == actual_keys
 
 
+#       ======================================
+#        parser._build_additional_information
+#       ======================================
+
+
+def test_parser_build_add_info_none_fail(parser: Robtex_Parser) -> None:
+    with pytest.raises(AssertionError):
+        report = parser._build_report(None)
+
