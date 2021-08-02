@@ -130,8 +130,17 @@ class Robtex_Caller(Collector_Caller):
                 elif code == 429:
                     return {"ERROR": "rate limit reached"}
                 else:
-                    text = await response.json()
-                    raise IOError(f"Server reply: {code} Message: {text}")
+                    type_is = response.content_type
+                    text = await self._handle_response_type(response)
+                    return {"ERROR": text}
+                    # raise IOError(f"Server reply: {code} Message: {text}")
+
+    async def _handle_response_type(self, response: aiohttp.ClientResponse) -> dict:
+        type_is = response.content_type
+        if type_is == "text/html":
+            return {"Message": await response.text()}
+        else:
+            return {"Message": await response.json()}
 
 
     def _build_endpoint(self, ip) -> str:
