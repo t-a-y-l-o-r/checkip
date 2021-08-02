@@ -11,13 +11,12 @@ import json
 # async stuff
 import aiohttp
 
-from .collectors import Collector
+from .collectors import (
+    Collector,
 
-'''
-            ================
-                  OTX
-            ================
-'''
+)
+
+class OTX_Parser()
 
 class OTX_Collector(Collector):
     '''
