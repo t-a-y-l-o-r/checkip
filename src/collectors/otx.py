@@ -14,8 +14,16 @@ import aiohttp
 from .collectors import (
     Collector,
     Collector_Parser,
-    Collector_Caller
+    Collector_Caller,
+    Collector_Status
 )
+
+
+@unique
+class OTX_Call_Type(Enum):
+    GENERAL = "general"
+    REPUTATION = "reputation"
+    URL_LIST = "url_list"
 
 
 class OTX_Parser(Collector_Parser):
@@ -23,8 +31,8 @@ class OTX_Parser(Collector_Parser):
         super().__init__(*args, **kwargs)
         self._header = "OTX"
 
-    def parse(self, raw_report: dict) -> dict:
 
+    def parse(self, raw_report: dict) -> dict:
         general_raw = raw_report[OTX_Call_Type.GENERAL.value]
         report = self._build_report(general_raw)
 
@@ -42,17 +50,10 @@ class OTX_Parser(Collector_Parser):
         return clean_report
 
 
-    def _build_add_info(self, reputation_raw: dict, url_list_raw: dict) -> dict:
-        reputation = self._parse_reputation(reputation_raw)
-        url_list = self._parse_url_list(url_list_raw)
-
-        return {
-            "reputation": reputation,
-            "domains": url_list
-        }
-
-
     def _build_report(self, response: dict) -> Dict[str, Any]:
+        if not response:
+            return None
+
         return {
             "asn": response.get("asn", None),
             "Country": response.get("country_name", None),
@@ -62,67 +63,70 @@ class OTX_Parser(Collector_Parser):
         }
 
 
+    def _build_add_info(self, reputation_raw: dict, url_list_raw: dict) -> dict:
+        reputation = self._parse_reputation(reputation_raw)
+        url_list = self._parse_url_list(url_list_raw)
+
+        return {
+            "reputation": reputation,
+            "url_list": url_list
+        }
+
+
     def _parse_reputation(self, response: dict) -> dict:
         if not response:
             return None
 
-        counts = response.get("counts", None)
+        reputation = response.get("reputation", None)
+        reputation = dict() if not reputation else reputation
+
+        counts = reputation.get("counts", None)
         return {
-            "threat_score": response.get("threat_score", None),
+            "threat_score": reputation.get("threat_score", None),
             "type_of_activities": list(counts.keys()) if counts else None,
-            "last_seen": response.get("last_seen", None),
-            "domains": response.get("domains", None)
+            "last_seen": reputation.get("last_seen", None),
+            "domains": reputation.get("domains", None)
         }
 
 
     def _parse_url_list(self, response: dict) -> List[str]:
-        json = response
-        urls = json.get("url_list")
-        assert urls is not None
-        url_list = []
-        domain = ""
-        for url in urls:
-            domain = url.get("domain")
-            if domain != "" and domain is not None:
-                url_list.append(domain)
+        if not response:
+            return []
+
+        raw_url_list = response.get("url_list", [])
+        flattened_url_list = [url["domain"] for url in raw_url_list]
+
+        valid_domain = lambda domain: domain != "" and domain is not None
+        url_list = list(filter(valid_domain, flattened_url_list))
+
         return url_list
 
-@unique
-class OTX_Call_Type(Enum):
-    GENERAL = "general"
-    REPUTATION = "reputation"
-    URL_LIST = "url_list"
+
 
 class OTX_Caller(Collector_Caller):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._session_headers: dict = {'X-OTX-API-KEY': self.key}
-        self._general: Optional[Dict[Any, Any]] = None
-        self._reputation: Optional[Dict[Any, Any]] = None
-        self._url_list: Optional[List[str]] = None
         self._endpoint = "https://otx.alienvault.com/api/v1/indicators/IPv4/"
 
 
     async def call(self, ip: str) -> dict:
-        # call everything and parse individually
-
-        caller = lambda call_type: self._call(ip, call_type=call_type)
+        caller = lambda call_type: self._call(ip, call_type)
         call_data = {call_type.value: await caller(call_type) for call_type in OTX_Call_Type}
 
         return call_data
 
 
-    async def _call(self, ip: str, call_type: OTX_Call_Type=None) -> dict:
+    async def _call(self, ip: str, call_type: OTX_Call_Type) -> dict:
         '''
         Call out to a given enpoint based on the call_type.
         provides a response if possible
         '''
-        if call_type is None:
-            raise ValueError("Invalid call type {call_type}")
-
+        assert call_type in OTX_Call_Type
         call_type = call_type.value
 
         endpoint = f"{self._endpoint}/{ip}/{call_type}"
+
         async with aiohttp.ClientSession(headers=self._session_headers) as session:
             async with session.get(endpoint) as response:
                 code = response.status
@@ -131,9 +135,16 @@ class OTX_Caller(Collector_Caller):
                 elif code == 204:
                     raise ValueError("OTX rate limit reached!")
                 else:
-                    text = await response.text()
-                    raise ValueError(f"Server reply: {code} Message: {text}")
+                    type_is = response.content_type
+                    text = await self._handle_response_type(response)
+                    raise IOError(text)
 
+    async def _handle_response_type(self, response: aiohttp.ClientResponse) -> dict:
+        type_is = response.content_type
+        if type_is == "text/html":
+            return {"Message": await response.text()}
+        else:
+            return {"Message": await response.json()}
 
 
 class OTX_Collector(Collector):

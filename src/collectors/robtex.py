@@ -133,7 +133,6 @@ class Robtex_Caller(Collector_Caller):
                     type_is = response.content_type
                     text = await self._handle_response_type(response)
                     return {"ERROR": text}
-                    # raise IOError(f"Server reply: {code} Message: {text}")
 
     async def _handle_response_type(self, response: aiohttp.ClientResponse) -> dict:
         type_is = response.content_type

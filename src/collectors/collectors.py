@@ -5,6 +5,7 @@ from typing import (
     Union
 )
 from abc import ABC, abstractmethod
+from enum import Enum, unique
 
 '''
             ================
@@ -13,13 +14,18 @@ from abc import ABC, abstractmethod
 '''
 
 class Collector_Parser(ABC):
-
     @abstractmethod
     def parse(self, report: dict) -> dict:
         '''
         Converts the given json report into a string
         '''
         pass
+
+
+@unique
+class Collector_Status(Enum):
+    OK = "ok"
+    ERROR = "error"
 
 
 class Collector_Caller(ABC):
