@@ -33,11 +33,14 @@ class OTX_Parser(Collector_Parser):
 
 
     def parse(self, raw_report: dict) -> dict:
-        general_raw = raw_report[OTX_Call_Type.GENERAL.value]
+        if not raw_report:
+            return self._empty_report()
+
+        general_raw = raw_report.get(OTX_Call_Type.GENERAL.value, None)
         report = self._build_report(general_raw)
 
-        reputation_raw = raw_report[OTX_Call_Type.REPUTATION.value]
-        url_list_raw = raw_report[OTX_Call_Type.URL_LIST.value]
+        reputation_raw = raw_report.get(OTX_Call_Type.REPUTATION.value, None)
+        url_list_raw = raw_report.get(OTX_Call_Type.URL_LIST.value, None)
 
         additional_information = self._build_add_info(reputation_raw, url_list_raw)
 
@@ -48,6 +51,13 @@ class OTX_Parser(Collector_Parser):
         }
 
         return clean_report
+
+    def _empty_report(self) -> dict:
+        return {
+            "header": None,
+            "report": None,
+            "additional_information": None
+        }
 
 
     def _build_report(self, response: dict) -> Dict[str, Any]:
