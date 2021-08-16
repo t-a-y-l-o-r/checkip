@@ -111,7 +111,7 @@ def test_parser_build_report_good(parser: OTX_Parser, raw_report: dict) -> None:
     assert expected_keys == actual_keys
 
 #       ======================================
-#           parser._build_report
+#           parser._build_add_info
 #       ======================================
 
 
@@ -145,6 +145,40 @@ def test_parser_build_add_info_good(parser: OTX_Parser, raw_report: dict) -> Non
     expected_keys = {
         "reputation",
         "url_list"
+    }
+    actual_keys = set(actual.keys())
+    assert expected_keys == actual_keys
+
+
+#       ======================================
+#           parser._parse_reputation
+#       ======================================
+
+
+def test_parser_parse_reputation_none(parser: OTX_Parser) -> None:
+    raw_report = None
+    actual = parser._parse_reputation(raw_report)
+
+    expected = None
+    assert expected == actual
+
+
+def test_parser_parse_reputation_empty(parser: OTX_Parser) -> None:
+    raw_report = {}
+    actual = parser._parse_reputation(raw_report)
+
+    expected = None
+    assert expected == actual
+
+
+def test_parser_parse_reputation_good(parser: OTX_Parser, raw_report: dict) -> None:
+    actual = parser._parse_reputation(raw_report)
+
+    expected_keys = {
+        "threat_score",
+        "type_of_activities",
+        "last_seen",
+        "domains"
     }
     actual_keys = set(actual.keys())
     assert expected_keys == actual_keys
