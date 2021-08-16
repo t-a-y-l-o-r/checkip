@@ -62,7 +62,7 @@ def test_parser_parse_keys(parser: Robtex_Parser, raw_report: dict) -> None:
 
 
 def test_parser_parse_empty(parser: Robtex_Parser) -> None:
-    should_fail = [
+    should_fail: list = [
         None,
         {}
     ]
@@ -130,7 +130,7 @@ def test_parser_build_error_report(parser: Robtex_Parser) -> None:
 
     for error in error_messages:
 
-        report = parser._build_error_report(error)
+        report = parser._build_error_report(error)  # type: ignore
         actual_keys = set(report.keys())
 
         assert expected_keys == actual_keys
@@ -149,7 +149,7 @@ def test_parser_build_valid_report(parser: Robtex_Parser, raw_report: dict) -> N
         "additional_information"
     }
 
-    report = parser._build_valid_report(raw_report)
+    report = parser._build_valid_report(raw_report) # type: ignore
     actual_keys = set(report.keys())
 
     assert expected_keys == actual_keys
@@ -182,7 +182,7 @@ def test_parser_build_report(parser: Robtex_Parser, raw_report: dict) -> None:
 
 def test_parser_build_add_info_none_fail(parser: Robtex_Parser) -> None:
     with pytest.raises(AssertionError):
-        report = parser._build_report(None)
+        report = parser._build_report(None) # type: ignore
 
 
 def test_parser_build_add_info_bad_keys(parser: Robtex_Parser) -> None:
@@ -197,25 +197,6 @@ def test_parser_build_add_info_bad_keys(parser: Robtex_Parser) -> None:
     report = parser._build_additional_information(report)
     actual_keys = set(report.keys())
 
-    assert expected_keys == actual_keys
-
-
-def test_parser_build_add_info_bad_keys(parser: Robtex_Parser) -> None:
-    report = {
-        "some_key": "value",
-        "asldhajsldhals": "1232103",
-    }
-    expected_keys = {
-        "passive_dns",
-        "active_dns"
-    }
-    report = parser._build_additional_information(report)
-    actual_keys = set(report.keys())
-
-    values = [value for key, value in report.items()]
-    has_values = all(values)
-
-    assert has_values == False
     assert expected_keys == actual_keys
 
 
@@ -237,7 +218,7 @@ def test_parser_build_add_info_valid(parser: Robtex_Parser, raw_report: dict) ->
 
 def test_praser_build_passive_dns_list_none(parser: Robtex_Parser) -> None:
     expected = None
-    actual = parser._build_passive_dns_list(None)
+    actual = parser._build_passive_dns_list(None) # type: ignore
 
     assert expected == actual
 
@@ -252,26 +233,6 @@ def test_praser_build_passive_dns_list_valid(parser: Robtex_Parser, raw_report: 
     assert expected == actual
 
 
-#       ======================================
-#        parser._build_passive_dns_list
-#       ======================================
-
-def test_praser_build_active_dns_list_none(parser: Robtex_Parser) -> None:
-    expected = None
-    actual = parser._build_active_dns_list(None)
-
-    assert expected == actual
-
-
-def test_praser_build_active_dns_list_valid(parser: Robtex_Parser, raw_report: dict) -> None:
-    active_dns = raw_report["act"]
-    site_key = "o"
-    expected = [dict_pair[site_key] for dict_pair in active_dns]
-
-    actual = parser._build_active_dns_list(active_dns)
-
-    assert expected == actual
-
 
 #       ======================================
 #        parser._build_dns_list
@@ -279,7 +240,7 @@ def test_praser_build_active_dns_list_valid(parser: Robtex_Parser, raw_report: d
 
 def test_praser_build_dns_list_none(parser: Robtex_Parser) -> None:
     expected = None
-    actual = parser._build_dns_list(None, None)
+    actual = parser._build_dns_list(None, None) # type: ignore
 
     assert expected == actual
 

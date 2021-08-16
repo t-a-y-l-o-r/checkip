@@ -1,12 +1,8 @@
 from typing import (
     Optional,
-    Dict,
-    List,
-    Any,
-    Coroutine,
-    Union
 )
 from enum import Enum, unique
+import multidict
 import aiohttp
 
 from .collectors import (
@@ -14,8 +10,6 @@ from .collectors import (
     Collector_Parser,
     Collector_Caller
 )
-
-import json
 
 '''
             ================
@@ -54,7 +48,6 @@ VT_Status_Symbols = {
 
 class VT_Parser(Collector_Parser):
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
         self._header = "Virus Total"
 
 
@@ -163,9 +156,12 @@ class VT_Caller(Collector_Caller):
     def __init__(self, key: str):
         super().__init__(key)
 
-        self._session_headers = {'x-apikey': self.key}
-        self._root_endpoint = 'https://www.virustotal.com/'
-        self._ip_endpoint = 'api/v3/ip_addresses/'
+        if not self.key:
+            self.key = ""
+        self._header = {"x-apikey": self.key}
+        self._session_headers = multidict.CIMultiDict(self._header)
+        self._root_endpoint = "https://www.virustotal.com/"
+        self._ip_endpoint = "api/v3/ip_addresses/"
 
 
     async def call(self, ip: str) -> dict:

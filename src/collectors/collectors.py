@@ -54,9 +54,10 @@ class Collector(Collector_Core):
     Defines the "interface" for the collector module
     All classes should override these methods
     '''
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         if len(args) < 1:
             raise ValueError(f"Collector expected one positional arguments, and instead got: {len(args)}")
+        self.ip = ""
         key = args[0]
 
         caller = kwargs.get("caller")

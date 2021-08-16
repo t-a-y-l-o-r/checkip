@@ -1,10 +1,7 @@
 from typing import (
-    Optional,
     Dict,
     List,
     Any,
-    Coroutine,
-    Union
 )
 from enum import Enum, unique
 
@@ -15,7 +12,6 @@ from .collectors import (
     Collector,
     Collector_Parser,
     Collector_Caller,
-    Collector_Status
 )
 
 
@@ -28,7 +24,6 @@ class OTX_Call_Type(Enum):
 
 class OTX_Parser(Collector_Parser):
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
         self._header = "OTX"
 
 
@@ -62,7 +57,7 @@ class OTX_Parser(Collector_Parser):
 
     def _build_report(self, response: dict) -> Dict[str, Any]:
         if not response:
-            return None
+            return dict()
 
         return {
             "asn": response.get("asn", None),
@@ -85,7 +80,7 @@ class OTX_Parser(Collector_Parser):
 
     def _parse_reputation(self, response: dict) -> dict:
         if not response:
-            return None
+            return dict()
 
         reputation = response.get("reputation", None)
         reputation = dict() if not reputation else reputation

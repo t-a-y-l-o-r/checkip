@@ -1,12 +1,6 @@
 from typing import (
     Optional,
-    Any,
-    Tuple,
-    Coroutine,
-    Union
 )
-
-from enum import Enum, unique
 
 # async stuff
 import aiohttp
@@ -99,7 +93,7 @@ class Robtex_Parser(Collector_Parser):
         if dns_dict:
             return [dict_pair[site_key] for dict_pair in dns_dict]
         else:
-            return None
+            return []
 
 
 class Robtex_Caller(Collector_Caller):

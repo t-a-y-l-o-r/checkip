@@ -24,7 +24,7 @@ def raw_report() -> dict:
 
 def test_parser_parse_none(parser: OTX_Parser) -> None:
     raw_report = None
-    actual = parser.parse(raw_report)
+    actual = parser.parse(raw_report) # type: ignore
 
     expected_keys = {
         "header",
@@ -36,7 +36,7 @@ def test_parser_parse_none(parser: OTX_Parser) -> None:
 
 
 def test_parser_parse_empty(parser: OTX_Parser) -> None:
-    raw_report = {}
+    raw_report: dict = dict()
     actual = parser.parse(raw_report)
 
     expected_keys = {
@@ -83,14 +83,14 @@ def test_parser_empty_report(parser: OTX_Parser) -> None:
 
 def test_parser_build_report_none(parser: OTX_Parser) -> None:
     raw_report = None
-    actual = parser._build_report(raw_report)
+    actual = parser._build_report(raw_report) # type: ignore
 
     expected = None
     assert expected == actual
 
 
 def test_parser_build_report_empty(parser: OTX_Parser) -> None:
-    raw_report = {}
+    raw_report: dict = dict()
     actual = parser._build_report(raw_report)
 
     expected = None
@@ -117,7 +117,7 @@ def test_parser_build_report_good(parser: OTX_Parser, raw_report: dict) -> None:
 
 def test_parser_build_add_info_none(parser: OTX_Parser) -> None:
     raw_report = None
-    actual = parser._build_add_info(raw_report, raw_report)
+    actual = parser._build_add_info(raw_report, raw_report) # type: ignore
 
     expected_keys = {
         "reputation",
@@ -128,8 +128,8 @@ def test_parser_build_add_info_none(parser: OTX_Parser) -> None:
 
 
 def test_parser_build_add_info_empty(parser: OTX_Parser) -> None:
-    raw_report = {}
-    actual = parser._build_add_info(raw_report, raw_report)
+    raw_report: dict = dict()
+    actual = parser._build_add_info(raw_report, raw_report) # type: ignore
 
     expected_keys = {
         "reputation",
@@ -157,15 +157,15 @@ def test_parser_build_add_info_good(parser: OTX_Parser, raw_report: dict) -> Non
 
 def test_parser_parse_reputation_none(parser: OTX_Parser) -> None:
     raw_report = None
-    actual = parser._parse_reputation(raw_report)
+    actual = parser._parse_reputation(raw_report) # type: ignore
 
     expected = None
     assert expected == actual
 
 
 def test_parser_parse_reputation_empty(parser: OTX_Parser) -> None:
-    raw_report = {}
-    actual = parser._parse_reputation(raw_report)
+    raw_report: dict = dict()
+    actual = parser._parse_reputation(raw_report) # type: ignore
 
     expected = None
     assert expected == actual
@@ -190,17 +190,17 @@ def test_parser_parse_reputation_good(parser: OTX_Parser, raw_report: dict) -> N
 
 def test_parser_parse_url_list_none(parser: OTX_Parser) -> None:
     raw_report = None
-    actual = parser._parse_url_list(raw_report)
+    actual = parser._parse_url_list(raw_report) # type: ignore
 
-    expected = []
+    expected: list = []
     assert expected == actual
 
 
 def test_parser_parse_url_list_empty(parser: OTX_Parser) -> None:
-    raw_report = {}
-    actual = parser._parse_url_list(raw_report)
+    raw_report: dict = dict()
+    actual = parser._parse_url_list(raw_report) # type: ignore
 
-    expected = []
+    expected: list = []
     assert expected == actual
 
 
