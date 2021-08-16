@@ -951,6 +951,7 @@ def test_display_silent(ui_obj, capsys) -> None:
     ])
     assert expected == actual, message
 
+
 def test_display_ip(ui_obj, capsys) -> None:
     '''
     Ensures that the correct output is printed when silent is set
@@ -962,35 +963,15 @@ def test_display_ip(ui_obj, capsys) -> None:
     actual = capsys.readouterr().out
 
     expected = "".join([
-        "\n    =============================\n",
-        f"     [ip]  {ip}  [ip]",
-        "\n    =============================\n\n",
+        f"\n{ui._TITLE_OFFSET}=============================\n",
+        f"{ui._TITLE_OFFSET}[ip]  {ip}  [ip]",
+        f"\n{ui._TITLE_OFFSET}=============================\n\n",
     ])
 
     message = "".join([
         f"EXPECTED: {repr(expected)} does not match ",
         f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
     ])
-    assert expected == actual, message
-
-def test_display_only_header(ui_obj, capsys) -> None:
-    '''
-    Ensures that ONLY the header is printed when ip is None
-    '''
-    ui_obj._silent = False
-
-    header = ""
-    ip = None
-    ui_obj.display_report(header, ip=ip)
-    actual = capsys.readouterr().out
-
-    expected = f"{header}\n"
-
-    message = "".join([
-        f"EXPECTED: {repr(expected)} does not match ",
-        f"ACTUAL: {repr(actual)} for UI(): {ui_obj}"
-    ])
-
     assert expected == actual, message
 
 #   ========================================================================
