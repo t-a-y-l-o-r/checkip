@@ -1,4 +1,10 @@
-from typing import Dict, Any, Optional, List
+from typing import (
+    Dict,
+    Any,
+    Optional,
+    List,
+    Union
+)
 from enum import Enum, unique
 import argparse
 import logging
@@ -32,6 +38,7 @@ RED = "\033[91m"
 YELLOW = "\033[93m"
 CLEAR = "\033[0m"
 
+_TITLE_OFFSET = "    "
 
 logging.basicConfig(
     filename=".log",
@@ -319,20 +326,28 @@ class UI():
         '''
         if self.silent:
             return
-
-        if parsed_report is None:
+        elif parsed_report is None:
             return
+        else:
+            header = parsed_report["header"]
+            info_dict = parsed_report["report"]
 
-        if isinstance(parsed_report, str):
-            print(parsed_report)
-            return
+            self._display_header(header)
+            self._display_info(info_dict)
 
-        header = parsed_report["header"]
-        info_dict = parsed_report["report"]
-        info_str = json.dumps(info_dict, indent=4, ensure_ascii=False)
+    def _display_header(self, header: str) -> None:
+        print("".join([
+            f"\n{_TITLE_OFFSET}------------------\n",
+            f"{_TITLE_OFFSET}{header}",
+            f"\n{_TITLE_OFFSET}------------------\n"
+        ]))
 
-        print(header)
-        print(info_str)
+    def _display_info(self, info: Union[dict, str]) -> None:
+        if isinstance(info, dict):
+            for key, val in info.items():
+                print(f"[{key}] {val}")
+        else:
+            print(info)
 
 
     def display_ip(self, ip: str) -> None:
@@ -342,11 +357,12 @@ class UI():
             return
 
         ip_output = "".join([
-            "\n    =============================\n",
-            f"     [ip]  {ip}  [ip]",
-            "\n    =============================\n",
+            f"\n{_TITLE_OFFSET}=============================\n",
+            f"{_TITLE_OFFSET}[ip]  {ip}  [ip]",
+            f"\n{_TITLE_OFFSET}=============================\n",
         ])
         print(ip_output)
+
 
     def display_excluded_ips(self, ips: Dict[str, str]) -> None:
         '''
@@ -363,8 +379,10 @@ class UI():
         ])
         print(output)
 
+
     def display_help(self) -> None:
         '''
         Displays the usage message for the cli
         '''
         self._parser.print_help()
+
