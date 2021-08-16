@@ -183,3 +183,35 @@ def test_parser_parse_reputation_good(parser: OTX_Parser, raw_report: dict) -> N
     actual_keys = set(actual.keys())
     assert expected_keys == actual_keys
 
+#       ======================================
+#           parser._url_list
+#       ======================================
+
+
+def test_parser_parse_url_list_none(parser: OTX_Parser) -> None:
+    raw_report = None
+    actual = parser._parse_url_list(raw_report)
+
+    expected = []
+    assert expected == actual
+
+
+def test_parser_parse_url_list_empty(parser: OTX_Parser) -> None:
+    raw_report = {}
+    actual = parser._parse_url_list(raw_report)
+
+    expected = []
+    assert expected == actual
+
+
+def test_parser_parse_url_list_good(parser: OTX_Parser, raw_report: dict) -> None:
+    raw_url_list = raw_report.get("url_list", [])
+    actual = parser._parse_url_list(raw_url_list)
+
+    flattened_url_list = [url["domain"] for url in raw_url_list]
+
+    valid_domain = lambda domain: domain != "" and domain is not None
+    expected = list(filter(valid_domain, flattened_url_list))
+
+    assert expected == actual
+
