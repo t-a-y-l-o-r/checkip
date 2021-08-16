@@ -1,6 +1,5 @@
 from typing import Dict, Any, Optional, List
 from enum import Enum, unique
-from io import StringIO
 import argparse
 import logging
 import socket
@@ -314,19 +313,40 @@ class UI():
             ]))
         return False
 
-    def display(self, header: str, ip: str=None) -> None:
+    def display_report(self, parsed_report: dict, ip: str=None) -> None:
         '''
         Builds the command line version of the report from the given header
         '''
         if self.silent:
             return
-        if ip is not None:
-            ip_output = StringIO()
-            ip_output.write("\n    =============================\n")
-            ip_output.write(f"     [ip]  {ip}  [ip]")
-            ip_output.write("\n    =============================\n")
-            print(ip_output.getvalue())
+
+        if parsed_report is None:
+            return
+
+        if isinstance(parsed_report, str):
+            print(parsed_report)
+            return
+
+        header = parsed_report["header"]
+        info_dict = parsed_report["report"]
+        info_str = json.dumps(info_dict, indent=4, ensure_ascii=False)
+
         print(header)
+        print(info_str)
+
+
+    def display_ip(self, ip: str) -> None:
+        assert ip is not None
+
+        if self.silent:
+            return
+
+        ip_output = "".join([
+            "\n    =============================\n",
+            f"     [ip]  {ip}  [ip]",
+            "\n    =============================\n",
+        ])
+        print(ip_output)
 
     def display_excluded_ips(self, ips: Dict[str, str]) -> None:
         '''
