@@ -1,4 +1,10 @@
-from typing import Dict, Any, Optional, List
+from typing import (
+    Dict,
+    Any,
+    Optional,
+    List,
+    Union
+)
 from enum import Enum, unique
 import argparse
 import logging
@@ -336,9 +342,12 @@ class UI():
             f"\n{_TITLE_OFFSET}------------------\n"
         ]))
 
-    def _display_info(self, info: dict) -> None:
-        for key, val in info.items():
-            print(f"[{key}] {val}")
+    def _display_info(self, info: Union[dict, str]) -> None:
+        if isinstance(info, dict):
+            for key, val in info.items():
+                print(f"[{key}] {val}")
+        else:
+            print(info)
 
 
     def display_ip(self, ip: str) -> None:
