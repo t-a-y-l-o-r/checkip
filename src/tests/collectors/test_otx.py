@@ -60,3 +60,43 @@ def test_parser_parse_good(parser: OTX_Parser, raw_report: dict) -> None:
     assert expected_keys == actual_keys
 
 
+#       ======================================
+#           parser._empty_report
+#       ======================================
+
+def test_parser_empty_report(parser: OTX_Parser) -> None:
+    actual_keys = parser._empty_report()
+
+    expected_keys = {
+        "header",
+        "report",
+        "additional_information"
+    }
+    actual_keys = set(actual.keys())
+    assert expected_keys == actual_keys
+
+
+def test_parser_empty_report_none(parser: OTX_Parser) -> None:
+    actual_keys = parser._empty_report(None)
+
+    expected_keys = {
+        "header",
+        "report",
+        "additional_information"
+    }
+    actual_keys = set(actual.keys())
+    assert expected_keys == actual_keys
+
+
+def test_parser_empty_report_bad_data(parser: OTX_Parser) -> None:
+    actual_keys = parser._empty_report("hello")
+
+    expected_keys = {
+        "header",
+        "report",
+        "additional_information"
+    }
+    actual_keys = set(actual.keys())
+    assert expected_keys == actual_keys
+
+
