@@ -43,6 +43,8 @@ Pygments = "==2.7.3"
 aiohttp = {extras = ["speedups"], version = "*"}
 config = "*"
 pytest-asyncio = "*"
+multidict = "*"
+asyncio = "*"
 
 [dev-packages]
 
