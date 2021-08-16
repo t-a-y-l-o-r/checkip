@@ -85,7 +85,7 @@ def test_parser_build_report_none(parser: OTX_Parser) -> None:
     raw_report = None
     actual = parser._build_report(raw_report) # type: ignore
 
-    expected = None
+    expected: dict = dict()
     assert expected == actual
 
 
@@ -93,7 +93,7 @@ def test_parser_build_report_empty(parser: OTX_Parser) -> None:
     raw_report: dict = dict()
     actual = parser._build_report(raw_report)
 
-    expected = None
+    expected: dict = dict()
     assert expected == actual
 
 
@@ -159,7 +159,7 @@ def test_parser_parse_reputation_none(parser: OTX_Parser) -> None:
     raw_report = None
     actual = parser._parse_reputation(raw_report) # type: ignore
 
-    expected = None
+    expected: dict = dict()
     assert expected == actual
 
 
@@ -167,7 +167,7 @@ def test_parser_parse_reputation_empty(parser: OTX_Parser) -> None:
     raw_report: dict = dict()
     actual = parser._parse_reputation(raw_report) # type: ignore
 
-    expected = None
+    expected: dict = dict()
     assert expected == actual
 
 

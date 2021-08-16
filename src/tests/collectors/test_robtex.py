@@ -217,7 +217,7 @@ def test_parser_build_add_info_valid(parser: Robtex_Parser, raw_report: dict) ->
 #       ======================================
 
 def test_praser_build_passive_dns_list_none(parser: Robtex_Parser) -> None:
-    expected = None
+    expected: list = []
     actual = parser._build_passive_dns_list(None) # type: ignore
 
     assert expected == actual
@@ -239,7 +239,7 @@ def test_praser_build_passive_dns_list_valid(parser: Robtex_Parser, raw_report: 
 #       ======================================
 
 def test_praser_build_dns_list_none(parser: Robtex_Parser) -> None:
-    expected = None
+    expected: list = []
     actual = parser._build_dns_list(None, None) # type: ignore
 
     assert expected == actual
