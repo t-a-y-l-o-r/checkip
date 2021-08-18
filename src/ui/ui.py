@@ -103,7 +103,7 @@ class UI():
         self._parser.add_argument(
             "-ip",
             action="store",
-            metavar="--ip",
+            metavar="x.x.x.x",
             type=str,
             help="".join([
                 "The ip to check for security concerns. ",
@@ -113,8 +113,8 @@ class UI():
         self._parser.add_argument(
             "-if",
             "--input-file",
+            metavar="fileName.txt",
             action="store",
-            metavar="--input-file",
             type=str,
             help="".join([
                 "The input file containing newline ",
@@ -126,7 +126,7 @@ class UI():
             "-u",
             "--host",
             action="store",
-            metavar="--host",
+            metavar="google.com",
             type=str,
             help="".join([
                 "The host to check for security concners.",
