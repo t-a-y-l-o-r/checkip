@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from typing import Optional, Set, Any
+from typing import Optional, Set
 import utility
 import os
 

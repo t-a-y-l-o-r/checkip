@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
-from collectors.collectors import Collector, Collector_Types, Collector_Factory
-from multiprocessing.connection import Connection
-from typing import Any, Dict, KeysView, List, Tuple
-import multiprocessing as multi
+from collectors import Collector_Types, Collector_Factory
+from typing import Any, Dict
 from report import report
 from reader import reader
-from io import StringIO
-import multiprocessing
 from ui import ui
-import traceback
-import cProfile
 import logging
+import asyncio
 import json
 import sys
+
 
 '''
 A set of python tools used to generate securirty reports on flagged ips.
@@ -124,180 +120,40 @@ class IP_Checker():
             self.report.create_record()
 
         # check if forcing all ips or not
-        actual_ips = None
+        add_to_record = None
+        ips_to_scan = None
         if self.ui.force:
-            actual_ips = self.filter_record_ips(
+            add_to_record = self.filter_record_ips(
                 self.ips,
                 record_ips,
                 display=False
             )
-            self.run_collector_pipeline(self.ips)
+            ips_to_scan = self.ips
         else:
-            actual_ips = self.filter_record_ips(self.ips, record_ips)
-            self.run_collector_pipeline(actual_ips.keys())
+            add_to_record = self.filter_record_ips(self.ips, record_ips)
+            ips_to_scan = add_to_record.keys()
+
+        full_report = self.run_collector_pipeline(ips_to_scan, self.collectors)
+        self.display_full_report(full_report)
 
         logger.info("Recording ips")
+        writable_report = json.dumps(full_report, indent=4)
+        self.report.write_report(writable_report)
         # merge dicts and record
-        self.record_ips({**actual_ips, **record_ips})
+        self.record_ips({**add_to_record, **record_ips})
 
+    def display_full_report(self, full_report):
 
-#   ========================================================================
-#                       Collector Process Stuff
-#   ========================================================================
+        for ip in full_report.keys():
+            report_lists = full_report[ip]
+            self.ui.display_ip(ip)
+            for pair in report_lists:
+                header = pair[0]
+                report = pair[1]
+                self.ui.display_report(header)
+                self.ui.display_report(report)
+                ip = None
 
-    def all_collectors(self) -> List[Collector]:
-        '''
-        Provide a list of collectors for each type
-        '''
-        col_list = []
-        for col_type in Collector_Types:
-            col_list.append(
-                self.factory.of(col_type)
-            )
-        return col_list
-
-    def process_pipe_data(
-        self,
-        pipe_pairs: List[Tuple[Connection, Connection]]
-    ) -> None:
-        '''
-        Manages the processing of pipe received from the parent
-        '''
-        first = True
-        for parent, child in pipe_pairs:
-            multi.connection.wait([parent])
-            data = parent.recv()
-            self.parse_pipe_data(data, use_ip=first)
-            first = False
-
-    def pipes_and_processes(
-        self,
-        queues: List[multi.Queue]
-    ) -> Tuple[List[Any], List[multi.Process]]:
-        pipe_pairs = []
-        processes = []
-        for queue in queues:
-            logger.info(f"Spining up collector process for: {queue}")
-            parent, child = multi.Pipe()
-            process = multi.Process(
-                target=self.process_collector_tasks,
-                args=(queue, child)
-            )
-            pipe_pairs.append((parent, child))
-            processes.append(process)
-        return pipe_pairs, processes
-
-    def run_collector_pipeline(self, ips: KeysView[Any]) -> None:
-        '''
-        The `master` method for all collector
-        pipes, processes, and tasks.
-        '''
-        # queue up all collector tasks
-        logger.info("Building collector task queues")
-        queues: List[multi.Queue] = []
-        for collector in self.collectors:
-            queues.append(
-                self.add_ip_tasks(multi.Queue(), ips, collector)
-            )
-
-        # initalize pip pairs and processes for each task-queue
-        pipe_pairs, processes = self.pipes_and_processes(queues)
-
-        # spin up processes
-        for process in processes:
-            logger.info(f"Spinning up process: {process}")
-            process.start()
-
-        for ip in ips:
-            self.process_pipe_data(pipe_pairs)
-
-        # join and close
-        for process in processes:
-            logger.info(f"Closing process: {process}")
-            process.join()
-            process.close()
-
-        for parent, child in pipe_pairs:
-            logger.info(f"Closing pipe: {parent}")
-            parent.close()
-
-
-    def parse_pipe_data(self, data: List[str], use_ip: bool=False) -> None:
-        '''
-        Takes in data from a piped collector result.
-        Will attmpt to parse that data and send it to the appropriate modules.
-        i.e. ui, report etc.
-
-        Params:
-            data - the data to parse
-            use_ip - whether or not the parsed version
-                     should include the ip address
-        Time:
-            constant
-        Space:
-            linear with the size of the collector data input
-        '''
-        ip = data[0]
-        header = data[1]
-        report = StringIO()
-        if use_ip:
-            self.ui.display(header, ip)
-            report.write(f"/*\n\t{ip}\n*/\n")
-        else:
-            self.ui.display(header)
-        report.write(f"/*\n{header}\n*/\n")
-        report.write(data[2])
-
-        self.report.write_report(report.getvalue())
-
-    def process_collector_tasks(
-        self,
-        queue: multi.Queue,
-        pipe: Connection
-    ) -> None:
-        '''
-        Attempts to process the task queue.
-        Will send the results through the pipe as needed.
-
-        Params:
-            queue - the queue of tasks to process
-            pipe - where to send the resutls through
-        Time:
-            Constant
-        Space:
-            Constant
-        '''
-        while not queue.empty():
-            task = queue.get()
-            ip = task[0]
-            collector = task[1]
-            collector.ip = ip
-            header = collector.header()
-            report = collector.report()
-            logger.info(f"Header and report received")
-            logger.info(f"Done processing {task}")
-            pipe.send([ip, header, report])
-
-    def add_ip_tasks(
-        self,
-        queue: multi.Queue,
-        ips: KeysView[Any],
-        collector: Collector
-    ) -> multi.Queue:
-        '''
-        Adds a set of ip and collector to the queue
-        for each ip in the global list of ips
-
-        Params:
-            queue - the queue to add elements
-            ips - the list of ip address to queue up for
-            collector - the collectors.Collector to use
-        Time:
-            linear with the number of ips
-        '''
-        for ip in ips:
-            queue.put([ip, collector])
-        return queue
 
 
 #   ========================================================================
@@ -340,8 +196,48 @@ class IP_Checker():
             self.ui.display_excluded_ips(excluded)
         return unique_ips
 
+#   ========================================================================
+#                       Collector Process Stuff
+#   ========================================================================
+
+    def run_collector_pipeline(self, ips_list, collectors):
+        logger.info("Building tasks")
+        full_report = {}
+        for ip in ips_list:
+            all_reports = asyncio.run(
+                self.run_all_collectors(ip, collectors)
+            )
+            full_report[ip] = all_reports
+
+        return full_report
+
+    async def run_all_collectors(self, ip, collectors):
+        report_funcs = []
+        for collector in collectors:
+            collector.ip = ip
+            report_funcs.append(collector.header())
+            report_funcs.append(collector.report())
+
+        await asyncio.gather(*report_funcs, return_exceptions=True)
+
+        header_report_pairs = []
+        for collector in collectors:
+            try:
+                header = await collector.header()
+                report = await collector.report()
+                header_report_pairs.append((header, report))
+            except ValueError as e:
+                logger.exception(e)
+                header = f"Collector {collector} errored out"
+                report = f"error message: {e}"
+                header_report_pairs.append((header, report))
+
+        return header_report_pairs
+
+
 if __name__ == "__main__":
-    #cProfile.run("IP_Checker().main()")
-    # hotfix for macos bug
-    multiprocessing.set_start_method("fork")
-    IP_Checker().main()
+    # import cProfile
+    # cProfile.run("main_loop()")
+
+    checker = IP_Checker()
+    checker.main()

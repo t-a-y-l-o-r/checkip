@@ -1,6 +1,11 @@
-from typing import Dict, Any, Optional, List
+from typing import (
+    Dict,
+    Any,
+    Optional,
+    List,
+    Union
+)
 from enum import Enum, unique
-from io import StringIO
 import argparse
 import logging
 import socket
@@ -33,6 +38,7 @@ RED = "\033[91m"
 YELLOW = "\033[93m"
 CLEAR = "\033[0m"
 
+_TITLE_OFFSET = "    "
 
 logging.basicConfig(
     filename=".log",
@@ -314,19 +320,49 @@ class UI():
             ]))
         return False
 
-    def display(self, header: str, ip: str=None) -> None:
+    def display_report(self, parsed_report: dict, ip: str=None) -> None:
         '''
         Builds the command line version of the report from the given header
         '''
         if self.silent:
             return
-        if ip is not None:
-            ip_output = StringIO()
-            ip_output.write("\n    =============================\n")
-            ip_output.write(f"     [ip]  {ip}  [ip]")
-            ip_output.write("\n    =============================\n")
-            print(ip_output.getvalue())
-        print(header)
+        elif parsed_report is None:
+            return
+        else:
+            header = parsed_report["header"]
+            info_dict = parsed_report["report"]
+
+            self._display_header(header)
+            self._display_info(info_dict)
+
+    def _display_header(self, header: str) -> None:
+        print("".join([
+            f"\n{_TITLE_OFFSET}------------------\n",
+            f"{_TITLE_OFFSET}{header}",
+            f"\n{_TITLE_OFFSET}------------------\n"
+        ]))
+
+    def _display_info(self, info: Union[dict, str]) -> None:
+        if isinstance(info, dict):
+            for key, val in info.items():
+                print(f"[{key}] {val}")
+        else:
+            print(info)
+
+
+    def display_ip(self, ip: str) -> None:
+        assert ip is not None
+
+        if self.silent:
+            return
+
+        ip_output = "".join([
+            f"\n{_TITLE_OFFSET}=============================\n",
+            f"{_TITLE_OFFSET}[ip]  {ip}  [ip]",
+            f"\n{_TITLE_OFFSET}=============================\n",
+        ])
+        print(ip_output)
+
 
     def display_excluded_ips(self, ips: Dict[str, str]) -> None:
         '''
@@ -343,8 +379,10 @@ class UI():
         ])
         print(output)
 
+
     def display_help(self) -> None:
         '''
         Displays the usage message for the cli
         '''
         self._parser.print_help()
+
