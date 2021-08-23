@@ -58,5 +58,8 @@ key=321cba
     * local storage?
 
 ## Known Issues
-Mac users, please add this line to your shell's dotfile:
-`export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=Yes`
+
+### Macos
+Checkout the current fix in [dev](https://github.com/t-a-y-l-o-r/checkip/tree/dev) and this [issue](https://github.com/t-a-y-l-o-r/checkip/issues/31)
+
+If you are having issues installing `multidict` through pip or pipenv you may need to [reinstall xcode](https://stackoverflow.com/questions/34617452/how-to-update-xcode-from-command-line)
