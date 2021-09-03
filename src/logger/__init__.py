@@ -1,9 +1,6 @@
-from typing import Any, Tuple
+from typing import Any, Callable, Tuple
 from functools import wraps
 import traceback
-
-from enum import Enum, unique
-
 import logging
 
 
@@ -29,7 +26,7 @@ def error_message(error_type: str, func_name: str, exc: Exception) -> str:
     ])
 
 
-def internal(func: callable) -> callable:
+def internal(func: Callable) -> Callable:
     @wraps(func)
     def wrapper(*args, **kwargs) -> Any:
         try:
@@ -40,10 +37,10 @@ def internal(func: callable) -> callable:
     return wrapper
 
 
-def network(call_types: Tuple[str]) -> callable:
+def network(call_types: Tuple[str]) -> Callable:
     assert _valid_call_types(call_types)
 
-    def decorator(func: callable) -> callable:
+    def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs) -> Any:
             try:
@@ -56,7 +53,7 @@ def network(call_types: Tuple[str]) -> callable:
             except OSError as e:
                 message = error_message(f"Networking Error", func.__name__, e)
                 if not e.args:
-                    e.args=('',)
+                    e.args = ('', )
 
                 e.args = (message,)
                 _LOGGER.error(e)
