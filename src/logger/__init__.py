@@ -3,6 +3,8 @@ from functools import wraps
 import traceback
 import logging
 
+import inspect
+
 
 RED = "\033[91m"
 YELLOW = "\033[93m"
@@ -28,12 +30,15 @@ def error_message(error_type: str, func_name: str, exc: Exception) -> str:
 
 def internal(func: Callable) -> Callable:
     @wraps(func)
-    def wrapper(*args, **kwargs) -> Any:
+    async def wrapper(*args, **kwargs) -> Any:
         try:
-            return func(*args, **kwargs)
+            return await func(*args, **kwargs)
         except Exception as e:
+            print(f"module: {func.__name__} : {inspect.getmodule(func)}")
+            message = error_message("Internal Error", func.__name__, e)
             _LOGGER.error(traceback.format_exc())
-            raise Exception(error_message("Internal Error", func.__name__, e))
+            _LOGGER.error(message)
+            print(message)
     return wrapper
 
 

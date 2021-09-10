@@ -214,7 +214,7 @@ class IP_Checker():
             collector.ip = ip
             report_funcs.append(collector.report())
 
-        return await asyncio.gather(*report_funcs, return_exceptions=True)
+        return await asyncio.gather(*report_funcs)
 
 if __name__ == "__main__":
     # import cProfile
