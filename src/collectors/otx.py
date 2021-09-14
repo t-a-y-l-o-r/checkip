@@ -135,6 +135,7 @@ class OTX_Caller(Collector_Caller):
         async with aiohttp.ClientSession(headers=self._session_headers) as session:
             async with session.get(endpoint) as response:
                 code = response.status
+                raise IOError("THIS IS A TEST")
                 if code == 200:
                     return await response.json()
                 elif code == 204:

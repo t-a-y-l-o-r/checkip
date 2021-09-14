@@ -19,7 +19,15 @@ logging.basicConfig(
 )
 _LOGGER = logging.getLogger("checkip")
 
-def error_message(error_type: str, func_name: str, exc: Exception) -> str:
+def _error_message(error_type: str, func: Callable, exc: Exception) -> str:
+    return "".join([
+        f"[*] {RED} Warning:{CLEAR} ",
+        f"{YELLOW} ({error_type}, {func.__name__}) -- ",
+        f"{exc.__class__.__name__} {CLEAR} {exc}",
+        f"{inspect.getmodule(func)}"
+    ])
+
+def _user_message(error_type: str, func_name: str, exc: Exception) -> str:
     return "".join([
         f"[*] {RED} Warning:{CLEAR} ",
         f"{YELLOW} ({error_type}, {func_name}) -- ",
@@ -35,10 +43,11 @@ def internal(func: Callable) -> Callable:
             return await func(*args, **kwargs)
         except Exception as e:
             print(f"module: {func.__name__} : {inspect.getmodule(func)}")
-            message = error_message("Internal Error", func.__name__, e)
+            error_message = _error_message("Internal Error", func, e)
+            user_message = _user_message("Internal Error", func.__name__, e)
             _LOGGER.error(traceback.format_exc())
             _LOGGER.error(message)
-            print(message)
+            return _user_message
     return wrapper
 
 
