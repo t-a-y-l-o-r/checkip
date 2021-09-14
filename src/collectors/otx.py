@@ -8,11 +8,14 @@ from enum import Enum, unique
 # async stuff
 import aiohttp
 
+# internal
 from .collectors import (
     Collector,
     Collector_Parser,
     Collector_Caller,
 )
+from logger import internal
+from logger.result import async_wrap
 
 
 @unique
@@ -27,6 +30,7 @@ class OTX_Parser(Collector_Parser):
         self._header = "OTX"
 
 
+    @internal
     def parse(self, raw_report: dict) -> dict:
         if not raw_report:
             return self._empty_report()
@@ -115,6 +119,7 @@ class OTX_Caller(Collector_Caller):
         self._endpoint = "https://otx.alienvault.com/api/v1/indicators/IPv4/"
 
 
+    @async_wrap
     async def call(self, ip: str) -> dict:
         caller = lambda call_type: self._call(ip, call_type)
         call_data = {call_type.value: await caller(call_type) for call_type in OTX_Call_Type}

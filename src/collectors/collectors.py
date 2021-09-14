@@ -7,6 +7,9 @@ from typing import (
 from abc import ABC, abstractmethod
 from enum import Enum, unique
 
+# internal
+from logger.result import Result
+
 '''
             ================
                 Collector
@@ -56,7 +59,9 @@ class Collector(Collector_Core):
     '''
     def __init__(self, *args: Any, **kwargs: Any):
         if len(args) < 1:
-            raise ValueError(f"Collector expected one positional arguments, and instead got: {len(args)}")
+            raise ValueError(
+                f"Collector expected at least one positional arguments, and instead got: {len(args)}"
+            )
         self.ip = ""
         key = args[0]
 
@@ -71,9 +76,17 @@ class Collector(Collector_Core):
         self._report: Optional[dict] = None
 
 
+
     async def report(self) -> Union[Coroutine[Any, Any, Any], dict]:
         if self._report is None:
-            result = await self._caller.call(self.ip)
-            self._report = self._parser.parse(result)
+            status, result = await self._caller.call(self.ip)
+            if status is Result.ERR:
+                self._report = {
+                    "header": self._parser._header,
+                    "report": result,
+                    "additional information": None
+                }
+            else:
+                self._report = self._parser.parse(result)
         return self._report
 

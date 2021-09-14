@@ -5,11 +5,15 @@ from typing import (
 # async stuff
 import aiohttp
 
+# internal
 from .collectors import (
     Collector,
     Collector_Parser,
     Collector_Caller
 )
+
+from logger import internal
+from logger.result import async_wrap
 
 '''
         =================
@@ -28,6 +32,7 @@ class Robtex_Parser(Collector_Parser):
         self._error_key = "ERROR"
 
 
+    @internal
     def parse(self, raw_report: dict) -> dict:
         assert raw_report
         error_message = raw_report.get(self._error_key, None)
@@ -102,6 +107,7 @@ class Robtex_Caller(Collector_Caller):
         self._base_endpoint: str = "https://freeapi.robtex.com"
 
 
+    @async_wrap
     async def call(self, ip: str) -> dict:
         return await self._call(ip)
 
@@ -122,11 +128,13 @@ class Robtex_Caller(Collector_Caller):
                 if code == 200:
                     return await response.json()
                 elif code == 429:
-                    return {"ERROR": "rate limit reached"}
+                    raise IOError("Robtex rate limit reached")
+                elif code == 502:
+                    raise IOError("Robtex bad gateway")
                 else:
                     type_is = response.content_type
                     text = await self._handle_response_type(response)
-                    return {"ERROR": text}
+                    raise IOError(text)
 
     async def _handle_response_type(self, response: aiohttp.ClientResponse) -> dict:
         type_is = response.content_type

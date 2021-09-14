@@ -24,6 +24,6 @@ def async_wrap(func: Callable):
             res = await func(*args, **kwargs)
             return (Result.OK, res)
         except Exception as e:
-            return (Result.ERR, e)
+            return (Result.ERR, str(e))
     return wrapper
 
