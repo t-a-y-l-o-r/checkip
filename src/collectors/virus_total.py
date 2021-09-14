@@ -11,6 +11,8 @@ from .collectors import (
     Collector_Caller
 )
 
+from logger.result import async_wrap
+
 '''
             ================
                Globals
@@ -164,6 +166,7 @@ class VT_Caller(Collector_Caller):
         self._ip_endpoint = "api/v3/ip_addresses/"
 
 
+    @async_wrap
     async def call(self, ip: str) -> dict:
         response = {
             call_type.value: await self._call(ip, call_type) for call_type in VT_Call_Type
