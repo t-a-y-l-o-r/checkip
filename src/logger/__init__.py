@@ -1,4 +1,4 @@
-from typing import Any, Callable, Tuple
+from typing import Any, Callable
 from functools import wraps
 import traceback
 import logging
@@ -46,48 +46,4 @@ def internal(func: Callable) -> Callable:
             _LOGGER.error(traceback.format_exc())
             _LOGGER.error(error_message)
     return wrapper
-
-
-def network(call_types: Tuple[str]) -> Callable:
-    assert _valid_call_types(call_types)
-
-    def decorator(func: Callable) -> Callable:
-        @wraps(func)
-        async def wrapper(*args, **kwargs) -> Any:
-            try:
-                response = await func(*args, **kwargs)
-
-                code, result = response
-                _raise_if_outside_types(code, call_types)
-
-                return result
-            except OSError as e:
-                message = error_message(f"Networking Error", func.__name__, e)
-                if not e.args:
-                    e.args = ('', )
-
-                e.args = (message,)
-                _LOGGER.error(e)
-                raise
-
-        return wrapper
-    return decorator
-
-def _raise_if_outside_types(code: int, call_types: Tuple[str]) -> None:
-    within_types = lambda code, call_types: str(code) in call_types
-
-    if not within_types(code, call_types):
-        raise OSError("".join([
-            "Unexpected https code outside list of acceptable codes. ",
-            f"Found {code}, expected one of {call_types}"
-        ]))
-
-
-def _valid_call_types(call_types: Tuple[str]) -> bool:
-    valid = call_types is not None
-
-    within_bounds = lambda val: 100 <= val and val <= 599
-    valid = valid and all([within_bounds(int(val)) for val in call_types])
-
-    return valid
 
