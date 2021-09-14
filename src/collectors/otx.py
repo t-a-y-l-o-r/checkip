@@ -28,7 +28,6 @@ class OTX_Parser(Collector_Parser):
 
 
     def parse(self, raw_report: dict) -> dict:
-        raise ValueError("hello")
         if not raw_report:
             return self._empty_report()
 
