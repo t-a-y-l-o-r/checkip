@@ -154,6 +154,12 @@ class IP_Checker():
         return self.filter_record_ips(new_ips, record_ips)
 
 
+    def _ips_to_scan(self, new_ips: dict, unique_ips: dict, forcing: bool) -> dict:
+        if forcing:
+            return new_ips
+        return unique_ips
+
+
     def display_full_report(self, full_report):
 
         for ip in full_report.keys():
