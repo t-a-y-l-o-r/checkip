@@ -95,6 +95,7 @@ class UI():
         self._ip_file: Optional[str] = None
         self._force: Optional[bool] = None
         self._silent: Optional[bool] = None
+        self._delete_cache: Optional[bool] = None
 
         self._parser = argparse.ArgumentParser(
             description="Checks the given ip(s) for security concerns"

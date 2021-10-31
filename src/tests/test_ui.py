@@ -43,7 +43,8 @@ UI_EXPECTED_ARGS = {
     "host",
     "force",
     "silent",
-    "verbose"
+    "verbose",
+    "delete_cache"
 }
 
 TEST_IP_FILE = "test_ip.txt"
