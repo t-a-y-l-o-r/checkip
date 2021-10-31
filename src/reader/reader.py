@@ -68,7 +68,9 @@ class Reader(Abstract_Reader):
             linear with the size of the file
         '''
         if not os.path.exists(file_path):
-            return json.loads("{}")
+            return dict()
         with open(file_path, "r") as f:
             ips = f.read()
+            if not ips:
+                return dict()
             return json.loads(ips)
