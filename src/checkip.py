@@ -124,17 +124,7 @@ class IP_Checker():
         add_to_record = self._add_to_record(self.ips, record_ips, self.ui.force)
         ips_to_scan = self._ips_to_scan(self.ips, add_to_record, self.ui.force)
 
-        # if self.ui.force:
-        #     add_to_record = self.filter_record_ips(
-        #         self.ips,
-        #         record_ips,
-        #         display=False
-        #     )
-        #     ips_to_scan = self.ips
-        # else:
-        #     add_to_record = self.filter_record_ips(self.ips, record_ips)
-        #     ips_to_scan = add_to_record.keys()
-
+        # collector magic happens here
         full_report = self.run_collector_pipeline(ips_to_scan, self.collectors)
         self.display_full_report(full_report)
 
