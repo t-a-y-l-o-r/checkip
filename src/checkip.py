@@ -107,6 +107,8 @@ class IP_Checker():
             self.ips.append(self.ui.ip)
         elif self.ui.ip_file is not None:
             self.ips = self.reader.read_input_file(self.ui.ip_file)
+        elif self.ui.delete_cache is not None:
+            self.report.delete_everything()
         else:
             logger.warning("No -if or -ip flag given")
             self.ui.display_help()

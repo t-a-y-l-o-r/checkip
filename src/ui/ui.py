@@ -64,6 +64,7 @@ class UI_Args(Enum):
     FORCE = "force"
     SILENT = "silent"
     VERBOSE = "verbose"
+    DELETE_CACHE = "delete_cache"
 
 
 #   ========================================================================
@@ -154,6 +155,13 @@ class UI():
             action="store_true",
             help="".join([
                 "Ensures additional information is output"
+            ])
+        )
+        self._parser.add_argument(
+            "--delete-cache",
+            action="store_true",
+            help ="".join([
+                "Deletes ALL records and reports"
             ])
         )
 
@@ -289,6 +297,15 @@ class UI():
             value = UI_Args.SILENT.value
             self._silent = self.args[value]
             return self._silent
+
+    @property
+    def delete_cache(self) -> bool:
+        if self._delete_cache is not None:
+            return self._delete_cache
+        else:
+            value = UI_Args.DELETE_CACHE.value
+            self._delete_cache = self.args[value]
+            return self._delete_cache
 
     def _validate_ip(self, ip: Optional[str]) -> bool:
         '''
