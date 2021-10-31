@@ -7,8 +7,6 @@ from typing import (
 from abc import ABC, abstractmethod
 from enum import Enum, unique
 
-# internal
-from logger.result import Result
 
 '''
             ================
@@ -79,14 +77,7 @@ class Collector(Collector_Core):
 
     async def report(self) -> Union[Coroutine[Any, Any, Any], dict]:
         if self._report is None:
-            status, result = await self._caller.call(self.ip)
-            if status is Result.ERR:
-                self._report = {
-                    "header": self._parser._header,
-                    "report": result,
-                    "additional information": None
-                }
-            else:
-                self._report = self._parser.parse(result)
+            result = await self._caller.call(self.ip)
+            self._report = self._parser.parse(result)
         return self._report
 

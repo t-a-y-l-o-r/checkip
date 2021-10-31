@@ -22,7 +22,6 @@ pjson = "==1.1"
 pluggy = "==0.13.1"
 py = "==1.10.0"
 py-spy = "==0.3.3"
-pycallgraph = "==1.0.1"
 pycodestyle = "==2.6.0"
 pyflakes = "==2.2.0"
 pylint = "==2.6.0"
@@ -45,8 +44,9 @@ config = "*"
 pytest-asyncio = "*"
 multidict = "*"
 asyncio = "*"
+graphviz = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"
