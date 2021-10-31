@@ -555,7 +555,8 @@ def test_args_from_config(ui_obj) -> None:
         "host": None,
         "force": False,
         "silent": False,
-        "verbose": False
+        "verbose": False,
+        "delete_cache": False,
 
     }
     actual = ui_obj.args
@@ -585,7 +586,8 @@ def test_args_from_user_input() -> None:
                 "host": None,
                 "force": False,
                 "silent": False,
-                "verbose": False
+                "verbose": False,
+                "delete_cache": False,
             }
         },
         {
@@ -600,7 +602,8 @@ def test_args_from_user_input() -> None:
                 "host": None,
                 "force": False,
                 "silent": False,
-                "verbose": False
+                "verbose": False,
+                "delete_cache": False,
             }
         },
         {
@@ -615,7 +618,8 @@ def test_args_from_user_input() -> None:
                 "host": "google.com",
                 "force": False,
                 "silent": False,
-                "verbose": False
+                "verbose": False,
+                "delete_cache": False,
             }
         },
     ]
