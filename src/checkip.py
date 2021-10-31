@@ -147,10 +147,7 @@ class IP_Checker():
         for ip in full_report.keys():
             report_lists = full_report[ip]
             self.ui.display_ip(ip)
-            for pair in report_lists:
-                header = pair[0]
-                report = pair[1]
-                self.ui.display_report(header)
+            for report in report_lists:
                 self.ui.display_report(report)
                 ip = None
 
@@ -215,25 +212,9 @@ class IP_Checker():
         report_funcs = []
         for collector in collectors:
             collector.ip = ip
-            report_funcs.append(collector.header())
             report_funcs.append(collector.report())
 
-        await asyncio.gather(*report_funcs, return_exceptions=True)
-
-        header_report_pairs = []
-        for collector in collectors:
-            try:
-                header = await collector.header()
-                report = await collector.report()
-                header_report_pairs.append((header, report))
-            except ValueError as e:
-                logger.exception(e)
-                header = f"Collector {collector} errored out"
-                report = f"error message: {e}"
-                header_report_pairs.append((header, report))
-
-        return header_report_pairs
-
+        return await asyncio.gather(*report_funcs)
 
 if __name__ == "__main__":
     # import cProfile

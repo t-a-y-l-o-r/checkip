@@ -5,11 +5,13 @@ from typing import (
 # async stuff
 import aiohttp
 
+# internal
 from .collectors import (
     Collector,
     Collector_Parser,
     Collector_Caller
 )
+
 
 '''
         =================
@@ -69,10 +71,10 @@ class Robtex_Parser(Collector_Parser):
     def _build_additional_information(self, call_dict: dict) -> dict:
         assert call_dict is not None
 
-        passive_dict = call_dict.get("pas", None)
+        passive_dict = call_dict.get("pas", dict())
         passive_list = self._build_passive_dns_list(passive_dict)
 
-        active_dict = call_dict.get("act", None)
+        active_dict = call_dict.get("act", dict())
         active_list = self._build_active_dns_list(active_dict)
 
         return {
@@ -122,11 +124,13 @@ class Robtex_Caller(Collector_Caller):
                 if code == 200:
                     return await response.json()
                 elif code == 429:
-                    return {"ERROR": "rate limit reached"}
+                    raise IOError("Robtex rate limit reached")
+                elif code == 502:
+                    raise IOError("Robtex bad gateway")
                 else:
                     type_is = response.content_type
                     text = await self._handle_response_type(response)
-                    return {"ERROR": text}
+                    raise IOError(text)
 
     async def _handle_response_type(self, response: aiohttp.ClientResponse) -> dict:
         type_is = response.content_type

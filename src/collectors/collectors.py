@@ -7,6 +7,7 @@ from typing import (
 from abc import ABC, abstractmethod
 from enum import Enum, unique
 
+
 '''
             ================
                 Collector
@@ -56,7 +57,9 @@ class Collector(Collector_Core):
     '''
     def __init__(self, *args: Any, **kwargs: Any):
         if len(args) < 1:
-            raise ValueError(f"Collector expected one positional arguments, and instead got: {len(args)}")
+            raise ValueError(
+                f"Collector expected at least one positional arguments, and instead got: {len(args)}"
+            )
         self.ip = ""
         key = args[0]
 
@@ -69,6 +72,7 @@ class Collector(Collector_Core):
             self._parser = parser()
 
         self._report: Optional[dict] = None
+
 
 
     async def report(self) -> Union[Coroutine[Any, Any, Any], dict]:

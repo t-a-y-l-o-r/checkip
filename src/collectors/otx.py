@@ -8,6 +8,7 @@ from enum import Enum, unique
 # async stuff
 import aiohttp
 
+# internal
 from .collectors import (
     Collector,
     Collector_Parser,
@@ -31,11 +32,11 @@ class OTX_Parser(Collector_Parser):
         if not raw_report:
             return self._empty_report()
 
-        general_raw = raw_report.get(OTX_Call_Type.GENERAL.value, None)
+        general_raw = raw_report.get(OTX_Call_Type.GENERAL.value, dict())
         report = self._build_report(general_raw)
 
-        reputation_raw = raw_report.get(OTX_Call_Type.REPUTATION.value, None)
-        url_list_raw = raw_report.get(OTX_Call_Type.URL_LIST.value, None)
+        reputation_raw = raw_report.get(OTX_Call_Type.REPUTATION.value, dict())
+        url_list_raw = raw_report.get(OTX_Call_Type.URL_LIST.value, dict())
 
         additional_information = self._build_add_info(reputation_raw, url_list_raw)
 
