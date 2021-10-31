@@ -114,6 +114,7 @@ class IP_Checker():
 
         # ensure report is empty
         self.report.create_report()
+
         # check to see if a record exists, else create it
         record_ips = self.reader.read_record("./record.json")
         if record_ips is {}:
@@ -141,6 +142,17 @@ class IP_Checker():
         self.report.write_report(writable_report)
         # merge dicts and record
         self.record_ips({**add_to_record, **record_ips})
+
+
+    def _add_to_record(self, new_ips: dict, record_ips: dict, forcing: bool) -> dict:
+        if forcing:
+            return self.filter_record_ips(
+                new_ips,
+                record_ips,
+                display=False
+            )
+        return self.filter_record_ips(new_ips, record_ips)
+
 
     def display_full_report(self, full_report):
 
