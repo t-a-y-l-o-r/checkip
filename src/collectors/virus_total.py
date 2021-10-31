@@ -80,8 +80,8 @@ class VT_Parser(Collector_Parser):
         attributes_json = ip_message["data"]["attributes"]
         last_results_json = attributes_json["last_analysis_results"]
 
-        owner = attributes_json["as_owner"]
-        status = attributes_json["last_analysis_stats"]
+        owner = attributes_json.get("as_owner", None)
+        status = attributes_json.get("last_analysis_stats", dict())
         checked = self._determine_overall_status(status)
         additional_info = self._filter_last_results(last_results_json)
 
