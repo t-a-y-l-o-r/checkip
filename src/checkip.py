@@ -107,6 +107,9 @@ class IP_Checker():
             self.ips.append(self.ui.ip)
         elif self.ui.ip_file is not None:
             self.ips = self.reader.read_input_file(self.ui.ip_file)
+        elif self.ui.delete_cache:
+            self.report.delete_everything()
+            self.ui._display_info("[*] All records and reports deleted")
         else:
             logger.warning("No -if or -ip flag given")
             self.ui.display_help()
@@ -114,25 +117,17 @@ class IP_Checker():
 
         # ensure report is empty
         self.report.create_report()
+
         # check to see if a record exists, else create it
         record_ips = self.reader.read_record("./record.json")
-        if record_ips is {}:
+        if not record_ips:
             self.report.create_record()
 
         # check if forcing all ips or not
-        add_to_record = None
-        ips_to_scan = None
-        if self.ui.force:
-            add_to_record = self.filter_record_ips(
-                self.ips,
-                record_ips,
-                display=False
-            )
-            ips_to_scan = self.ips
-        else:
-            add_to_record = self.filter_record_ips(self.ips, record_ips)
-            ips_to_scan = add_to_record.keys()
+        add_to_record = self._add_to_record(self.ips, record_ips, self.ui.force)
+        ips_to_scan = self._ips_to_scan(self.ips, add_to_record, self.ui.force)
 
+        # collector magic happens here
         full_report = self.run_collector_pipeline(ips_to_scan, self.collectors)
         self.display_full_report(full_report)
 
@@ -141,6 +136,23 @@ class IP_Checker():
         self.report.write_report(writable_report)
         # merge dicts and record
         self.record_ips({**add_to_record, **record_ips})
+
+
+    def _add_to_record(self, new_ips: list, record_ips: dict, forcing: bool) -> dict:
+        if forcing:
+            return self.filter_record_ips(
+                new_ips,
+                record_ips,
+                display=False
+            )
+        return self.filter_record_ips(new_ips, record_ips)
+
+
+    def _ips_to_scan(self, new_ips: list, unique_ips: dict, forcing: bool) -> list:
+        if forcing:
+            return new_ips
+        return list(unique_ips.keys())
+
 
     def display_full_report(self, full_report):
 
@@ -168,7 +180,7 @@ class IP_Checker():
 
     def filter_record_ips(
         self,
-        given: Dict[str, str],
+        given: list,
         record: Dict[str, str],
         display: bool=True
     ) -> Dict:

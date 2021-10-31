@@ -45,3 +45,13 @@ class Report_Builder():
         '''
         with open(file, "w") as f:
             f.write(record)
+
+    def delete_everything(
+            self,
+            report_file: str="./report.json",
+            record_file: str="./record.json") -> None:
+        with open(report_file, "w+") as f:
+            f.write("")
+
+        with open(record_file, "w+") as f:
+            f.write("")
