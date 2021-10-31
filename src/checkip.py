@@ -109,6 +109,7 @@ class IP_Checker():
             self.ips = self.reader.read_input_file(self.ui.ip_file)
         elif self.ui.delete_cache:
             self.report.delete_everything()
+            self.ui._display_info("[*] All records and reports deleted")
         else:
             logger.warning("No -if or -ip flag given")
             self.ui.display_help()
