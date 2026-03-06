@@ -3,8 +3,7 @@
 checkip was built for my security team who were spending up to an hour reviewing potentially malicious behaviour from certain IPs. After a lot of back and forth and some testing I eventually came up with this cli.
 It was a huge success for them and was used even after I left the company.
 
-Summary:
-Aggregates data from multiple security APIs in parallel to build a consolidated report on any IPv4 address — including reputation scores, geo-location, associated domains, and passive/active DNS records.
+It aggregates data from multiple security APIs in parallel to build a consolidated report on any IPv4 address, including reputation scores, geo-location, associated domains, and passive/active DNS records.
 
 ---
 
